@@ -1,0 +1,7 @@
+Use [bits 16] **just before 16bit functions** in asm files **having [bits 32] directive**.
+
+Use [bits 32] **just before 32bit functions**.
+
+Use [bits 16] or [bits 32] **at most once** in a asm file.
+
+Use ** nasm .\boot_sect.asm -f bin -o .\boot_sect.bin ** to assemble asm files.
