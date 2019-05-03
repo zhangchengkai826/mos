@@ -1,5 +1,14 @@
+typedef unsigned char uint8;
+typedef unsigned uint32;
+
+void write_mem8(uint32 addr, uint8 data) {
+  *(uint8 *)addr = data;
+}
+
 void main() {
-  char *video_memory = (char *) 0xb8000;
-  *video_memory = 'X';
+  uint32 i;
+  for(i = 0xa0000u; i <= 0xaffffu; i++) {
+    write_mem8(i, 15u);
+  }
 }
 
