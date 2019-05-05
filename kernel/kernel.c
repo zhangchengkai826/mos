@@ -81,21 +81,22 @@ void boxfill8(uint8 *vram, int xsize, uint8 c, int x0, int y0, int x1, int y1) {
       vram[y * xsize + x] = c;
 }
 
-void main() {
+struct BOOTINFO {
+  uint8 cyls, leds, vmode, reserve;
+  uint16 scrnx, scrny;
   uint8 *vram;
-  int xsize, ysize;
-  uint16 *binfo_scrnx, *binfo_scrny;
-  uint32 *binfo_vram;
+};
+
+void init_screen(uint8 *vram, int xsize, int ysize) {
+  boxfill8(vram, xsize, COL8_FF0000, 20, 20, 120, 120);
+}
+
+void main() {
+  struct BOOTINFO *binfo = (struct BOOTINFO *)0x0ff0;
 
   init_palette();
-  binfo_scrnx = (uint16 *)0x0ff4;
-  binfo_scrny = (uint16 *)0x0ff6;
-  binfo_vram = (uint32 *)0x0ff8;
-  xsize = *binfo_scrnx;
-  ysize = *binfo_scrny;
-  vram = (uint8 *)*binfo_vram;
+  init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
 
-  boxfill8(vram, xsize, COL8_FF0000, 20, 20, 120, 120);
   hlt();
 }
 
