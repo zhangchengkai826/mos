@@ -22,6 +22,10 @@ KERNEL_OFFSET equ 0x1000
 
 [bits 16]
 
+SCRNX equ 0x0ff4
+SCRNY equ 0x0ff6
+VRAM equ 0x0ff8
+
 load_kernel:
 	mov bx, MSG_LOAD_KERNEL
 	call print_string
@@ -34,6 +38,10 @@ load_kernel:
         mov al, 0x13
         mov ah, 0x00
         int 0x10
+
+        mov word[SCRNX], 320
+        mov word[SCRNY], 200
+        mov dword[VRAM], 0x000a0000
 
 	ret
 

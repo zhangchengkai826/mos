@@ -82,10 +82,20 @@ void boxfill8(uint8 *vram, int xsize, uint8 c, int x0, int y0, int x1, int y1) {
 }
 
 void main() {
-  uint8 *p;
+  uint8 *vram;
+  int xsize, ysize;
+  uint16 *binfo_scrnx, *binfo_scrny;
+  uint32 *binfo_vram;
+
   init_palette();
-  p = (uint8 *)0xa0000;
-  boxfill8(p, 320, COL8_FF0000, 20, 20, 120, 120);
+  binfo_scrnx = (uint16 *)0x0ff4;
+  binfo_scrny = (uint16 *)0x0ff6;
+  binfo_vram = (uint32 *)0x0ff8;
+  xsize = *binfo_scrnx;
+  ysize = *binfo_scrny;
+  vram = (uint8 *)*binfo_vram;
+
+  boxfill8(vram, xsize, COL8_FF0000, 20, 20, 120, 120);
   hlt();
 }
 
