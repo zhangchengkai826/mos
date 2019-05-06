@@ -89,6 +89,27 @@ struct BOOTINFO {
   uint8 *vram;
 };
 
+void memcpy(uint8 *dest, uint8 *src, int size) {
+  int i;
+  for(i = 0; i < size; i++)
+    dest[i] = src[i];
+}
+
+void init_mouse_cursor8(uint8 *mouse) {
+  int i;
+  uint8 d[] = {224, 240, 248, 254, 255, 255, 255, 252, 252, 220, 28, 14, 14, 6, 7, 3};
+  memcpy(mouse, d, 16);
+}
+
+void putblock8_8(uint8 *vram, int vxsize, int pxsize, int pysize, int px0, int py0, uint8 *buf, int bxsize) {
+  int x, y;
+  for(y = 0; y < pysize; y++) {
+    for(x = 0; x < pxsize; x++) {
+      vram[(py0 + y) * vxsize + (px0 + x)] = buf[y * bxsize + x];
+    }
+  }
+}
+
 void init_screen(uint8 *vram, int xsize, int ysize) {
   boxfill8(vram, xsize, COL8_FF0000, 20, 20, 120, 120);
   putfonts8_asc(vram, xsize, 30, 40, COL8_00FFFF, "hello world!");
@@ -99,6 +120,10 @@ void main() {
 
   init_palette();
   init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
+
+  uint8 mcursor[16];
+  init_mouse_cursor8(mcursor);
+  putfont8(binfo->vram, binfo->scrnx, 100, 125, COL8_FFFFFF, mcursor);
 
   hlt();
 }
