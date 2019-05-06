@@ -2,6 +2,8 @@ typedef unsigned char uint8;
 typedef unsigned short uint16;
 typedef unsigned uint32;
 
+#include "fonts.h"
+
 void hlt() {
   asm("hlt");
 }
@@ -87,30 +89,9 @@ struct BOOTINFO {
   uint8 *vram;
 };
 
-void putfont8(uint8 *vram, int xsize, int x, int y, uint8 c, uint8 *font) {
-  int i;
-  uint8 *p, d;
-  for(i = 0; i < 16; i++) {
-    p = vram + (y + i) * xsize + x;
-    d = font[i];
-    if((d & 0x80) != 0) p[0] = c;
-    if((d & 0x40) != 0) p[1] = c;
-    if((d & 0x20) != 0) p[2] = c;
-    if((d & 0x10) != 0) p[3] = c;
-    if((d & 0x08) != 0) p[4] = c;
-    if((d & 0x04) != 0) p[5] = c;
-    if((d & 0x02) != 0) p[6] = c;
-    if((d & 0x01) != 0) p[7] = c;
-  }
-}
-
 void init_screen(uint8 *vram, int xsize, int ysize) {
   boxfill8(vram, xsize, COL8_FF0000, 20, 20, 120, 120);
-  uint8 font_A[16] = {
-    0x00, 0x18, 0x18, 0x18, 0x18, 0x24, 0x24, 0x24,
-    0x24, 0x7e, 0x42, 0x42, 0x42, 0xe7, 0x00, 0x00
-  };
-  putfont8(vram, xsize, 10, 20, COL8_0000FF, font_A);
+  putfonts8_asc(vram, xsize, 30, 40, COL8_00FFFF, "hello world!");
 }
 
 void main() {
