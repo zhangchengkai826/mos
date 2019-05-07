@@ -2,6 +2,7 @@
 
 global io_out8, io_load_eflags, io_store_eflags
 global asm_inthandler21
+global load_idtr
 
 extern inthandler21
 
@@ -39,4 +40,10 @@ asm_inthandler21:
         pop ds
         pop es
         iret
+
+load_idtr:
+        mov ax, [esp+4]
+        mov [esp+6], ax
+        lidt [esp+6]
+        ret
 

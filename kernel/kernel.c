@@ -17,6 +17,8 @@ typedef unsigned uint32;
 #define PIC1_ICW3 0x00a1
 #define PIC1_ICW4 0x00a1
 
+#define AR_INTGATE32 0x8e
+
 #include "fonts.h"
 
 void hlt() {
@@ -153,10 +155,40 @@ void inthandler21(int *esp) {
   putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, "INT 21: PS/2 keyboard");
 }
 
+struct GATE_DESCRIPTOR {
+  uint16 offset_low, selector;
+  uint8 zero, access_right;
+  uint16 offset_high;
+};
+
+void load_idtr(uint16 limit, uint32 addr);
+
+void set_gatedesc(struct GATE_DESCRIPTOR *gd, uint32 offset, uint16 selector, uint8 ar) {
+  gd->offset_low = offset & 0xffff;
+  gd->selector = selector;
+  gd->zero = 0;
+  gd->access_right = ar;
+  gd->offset_high = (offset >> 16) & 0xffff;
+}
+
+void init_idt(struct GATE_DESCRIPTOR *idt) {
+  int i;
+  for(i = 0; i < 256; i++) {
+    set_gatedesc(idt + i, 0, 0, 0);
+  }
+  load_idtr(0x7ff, (uint32)idt);
+}
+
+void asm_inthandler21();
+
 void main() {
+  struct GATE_DESCRIPTOR idt[256];
   struct BOOTINFO *binfo = (struct BOOTINFO *)ADR_BOOTINFO;
 
   init_pic();
+  init_idt(idt);
+  set_gatedesc(idt+0x21, (uint32)asm_inthandler21, 2 << 3, AR_INTGATE32);
+
   init_palette();
   init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
 
