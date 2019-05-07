@@ -2,6 +2,21 @@ typedef unsigned char uint8;
 typedef unsigned short uint16;
 typedef unsigned uint32;
 
+#define ADR_BOOTINFO 0x0ff0
+
+#define PIC0_ICW1 0x0020
+#define PIC0_OCW2 0x0020
+#define PIC0_IMR 0x0021
+#define PIC0_ICW2 0x0021
+#define PIC0_ICW3 0x0021
+#define PIC0_ICW4 0x0021
+#define PIC1_ICW1 0x00a0
+#define PIC1_OCW2 0x00a0
+#define PIC1_IMR 0x00a1
+#define PIC1_ICW2 0x00a1
+#define PIC1_ICW3 0x00a1
+#define PIC1_ICW4 0x00a1
+
 #include "fonts.h"
 
 void hlt() {
@@ -21,6 +36,24 @@ void io_cli() {
 }
 
 void io_out8(uint16 port, uint8 data);
+
+void init_pic() {
+  io_out8(PIC0_IMR, 0xff);
+  io_out8(PIC1_IMR, 0xff);
+
+  io_out8(PIC0_ICW1, 0x11);
+  io_out8(PIC0_ICW2, 0x20);
+  io_out8(PIC0_ICW3, 1 << 2);
+  io_out8(PIC0_ICW4, 0x01);
+
+  io_out8(PIC1_ICW1, 0x11);
+  io_out8(PIC1_ICW2, 0x28);
+  io_out8(PIC1_ICW3, 2);
+  io_out8(PIC1_ICW4, 0x01);
+
+  io_out8(PIC0_IMR, 0xfb);
+  io_out8(PIC1_IMR, 0xff);
+}
 
 void set_palette(int start, int end, uint8 *rgb) {
   uint32 i, eflags;
@@ -115,9 +148,15 @@ void init_screen(uint8 *vram, int xsize, int ysize) {
   putfonts8_asc(vram, xsize, 30, 40, COL8_00FFFF, "hello world!");
 }
 
-void main() {
-  struct BOOTINFO *binfo = (struct BOOTINFO *)0x0ff0;
+void inthandler21(int *esp) {
+  struct BOOTINFO *binfo = (struct BOOTINFO *)ADR_BOOTINFO;
+  putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, "INT 21: PS/2 keyboard");
+}
 
+void main() {
+  struct BOOTINFO *binfo = (struct BOOTINFO *)ADR_BOOTINFO;
+
+  init_pic();
   init_palette();
   init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
 
