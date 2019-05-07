@@ -1,6 +1,9 @@
 [bits 32]
 
 global io_out8, io_load_eflags, io_store_eflags
+global asm_inthandler21
+
+extern inthandler21
 
 io_out8:
         mov edx, [esp+4]
@@ -18,4 +21,22 @@ io_store_eflags:
         push eax
         popfd
         ret
+
+asm_inthandler21:
+        push es
+        push ds
+        pushad
+        mov eax, esp
+        push eax
+        mov ax, ss
+        mov ds, ax
+        mov es, ax
+
+        call inthandler21
+
+        pop eax
+        popad
+        pop ds
+        pop es
+        iret
 
