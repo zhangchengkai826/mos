@@ -37,6 +37,10 @@ void io_cli() {
   asm("cli");
 }
 
+void io_sti() {
+  asm("sti");
+}
+
 void io_out8(uint16 port, uint8 data);
 
 void init_pic() {
@@ -185,9 +189,12 @@ void main() {
   struct GATE_DESCRIPTOR idt[256];
   struct BOOTINFO *binfo = (struct BOOTINFO *)ADR_BOOTINFO;
 
-  init_pic();
+  io_cli();
   init_idt(idt);
-  set_gatedesc(idt+0x21, (uint32)asm_inthandler21, 2 << 3, AR_INTGATE32);
+  init_pic();
+  set_gatedesc(idt+0x21, (uint32)asm_inthandler21, 1 << 3, AR_INTGATE32);
+  io_out8(PIC0_IMR, 0xf9);
+  io_sti();
 
   init_palette();
   init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
@@ -196,6 +203,6 @@ void main() {
   init_mouse_cursor8(mcursor);
   putfont8(binfo->vram, binfo->scrnx, 100, 125, COL8_FFFFFF, mcursor);
 
-  hlt();
+  for(;;) hlt();
 }
 
