@@ -1,49 +1,11 @@
-typedef unsigned char uint8;
-typedef unsigned short uint16;
-typedef unsigned uint32;
-
-#define ADR_BOOTINFO 0x0ff0
-
-#define PIC0_ICW1 0x0020
-#define PIC0_OCW2 0x0020
-#define PIC0_IMR 0x0021
-#define PIC0_ICW2 0x0021
-#define PIC0_ICW3 0x0021
-#define PIC0_ICW4 0x0021
-#define PIC1_ICW1 0x00a0
-#define PIC1_OCW2 0x00a0
-#define PIC1_IMR 0x00a1
-#define PIC1_ICW2 0x00a1
-#define PIC1_ICW3 0x00a1
-#define PIC1_ICW4 0x00a1
-
-#define AR_INTGATE32 0x8e
-
+#include "lowlevel.h"
 #include "fonts.h"
 #include "stdlib.h"
-
-void hlt() {
-  asm("hlt");
-}
+#include "keyboard.h"
 
 void write_mem8(uint32 addr, uint8 data) {
   *(uint8 *)addr = data;
 }
-
-uint32 io_load_eflags();
-
-void io_store_eflags(uint32 eflags);
-
-void io_cli() {
-  asm("cli");
-}
-
-void io_sti() {
-  asm("sti");
-}
-
-uint8 io_in8(uint16 port);
-void io_out8(uint16 port, uint8 data);
 
 void init_pic() {
   io_out8(PIC0_IMR, 0xff);
@@ -156,25 +118,11 @@ void init_screen(uint8 *vram, int xsize, int ysize) {
   putfonts8_asc(vram, xsize, 30, 40, COL8_00FFFF, "hello world!");
 }
 
-#define PORT_KEYDAT 0x0060
-void inthandler21(int *esp) {
-  struct BOOTINFO *binfo = (struct BOOTINFO *)ADR_BOOTINFO;
-  uint8 data, s[4];
-  io_out8(PIC0_OCW2, 0x61);
-  data = io_in8(PORT_KEYDAT);
-
-  u2s(s, data);
-  boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 0, 0, 64, 32);
-  putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
-}
-
 struct GATE_DESCRIPTOR {
   uint16 offset_low, selector;
   uint8 zero, access_right;
   uint16 offset_high;
 };
-
-void load_idtr(uint16 limit, uint32 addr);
 
 void set_gatedesc(struct GATE_DESCRIPTOR *gd, uint32 offset, uint16 selector, uint8 ar) {
   gd->offset_low = offset & 0xffff;
@@ -191,8 +139,6 @@ void init_idt(struct GATE_DESCRIPTOR *idt) {
   }
   load_idtr(0x7ff, (uint32)idt);
 }
-
-void asm_inthandler21();
 
 void main() {
   struct GATE_DESCRIPTOR idt[256];
