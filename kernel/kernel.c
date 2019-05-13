@@ -20,6 +20,7 @@ typedef unsigned uint32;
 #define AR_INTGATE32 0x8e
 
 #include "fonts.h"
+#include "stdlib.h"
 
 void hlt() {
   asm("hlt");
@@ -41,6 +42,7 @@ void io_sti() {
   asm("sti");
 }
 
+uint8 io_in8(uint16 port);
 void io_out8(uint16 port, uint8 data);
 
 void init_pic() {
@@ -154,9 +156,16 @@ void init_screen(uint8 *vram, int xsize, int ysize) {
   putfonts8_asc(vram, xsize, 30, 40, COL8_00FFFF, "hello world!");
 }
 
+#define PORT_KEYDAT 0x0060
 void inthandler21(int *esp) {
   struct BOOTINFO *binfo = (struct BOOTINFO *)ADR_BOOTINFO;
-  putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, "INT 21: PS/2 keyboard");
+  uint8 data, s[4];
+  io_out8(PIC0_OCW2, 0x61);
+  data = io_in8(PORT_KEYDAT);
+
+  u2s(s, data);
+  boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 0, 0, 64, 32);
+  putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
 }
 
 struct GATE_DESCRIPTOR {

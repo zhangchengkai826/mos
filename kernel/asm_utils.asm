@@ -1,10 +1,16 @@
 [bits 32]
 
-global io_out8, io_load_eflags, io_store_eflags
+global io_in8, io_out8, io_load_eflags, io_store_eflags
 global asm_inthandler21
 global load_idtr
 
 extern inthandler21
+
+io_in8:
+        mov edx, [esp+4]
+        mov eax, 0
+        in al, dx
+        ret
 
 io_out8:
         mov edx, [esp+4]
