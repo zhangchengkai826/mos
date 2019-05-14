@@ -18,6 +18,7 @@ void init_mouse_cursor8(unsigned char *mouse) {
 void main() {
   struct GATE_DESCRIPTOR idt[256];
   struct BOOTINFO *binfo = (struct BOOTINFO *)ADR_BOOTINFO;
+  unsigned char keybuf[32];
 
   io_cli();
   init_idt(idt);
@@ -33,9 +34,20 @@ void main() {
   init_mouse_cursor8(mcursor);
   putfont8(binfo->vram, binfo->scrnx, 100, 125, COL8_FFFFFF, mcursor);
 
+  fifo8_init(&keyfifo, 32, keybuf);
+
   for(;;) {
-    hlt();
+    io_cli();
+    if(fifo8_status(&keyfifo) == 0) {
+      io_stihlt();
+    } else {
+      unsigned char i = fifo8_get(&keyfifo);
+      char s[8];
+      io_sti();
+      u2s(s, i);
+      boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 0, 0, 64, 32);
+      putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
+    }
   }
-    
 }
 

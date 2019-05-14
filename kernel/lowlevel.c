@@ -12,6 +12,11 @@ void io_sti() {
   asm("sti");
 }
 
+void io_stihlt() {
+  asm("sti");
+  asm("hlt");
+}
+
 void write_mem8(unsigned addr, unsigned char data) {
   *(unsigned char *)addr = data;
 }

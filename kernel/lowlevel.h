@@ -33,6 +33,7 @@ struct GATE_DESCRIPTOR {
 void hlt();
 void io_cli();
 void io_sti();
+void io_stihlt();
 unsigned io_load_eflags();
 void io_store_eflags(unsigned eflags);
 unsigned char io_in8(unsigned short port);
