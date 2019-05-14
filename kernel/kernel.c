@@ -2,6 +2,7 @@
 #include "graphic.h"
 #include "fonts.h"
 #include "keyboard.h"
+#include "mouse.h"
 #include "stdlib.h"
 
 void init_screen(unsigned char *vram, int xsize, int ysize) {
@@ -24,8 +25,11 @@ void main() {
   init_idt(idt);
   init_pic();
   set_gatedesc(idt+0x21, (unsigned)asm_inthandler21, 1 << 3, AR_INTGATE32);
+  set_gatedesc(idt+0x2c, (unsigned)asm_inthandler2c, 1 << 3, AR_INTGATE32);
   init_keyboard();
+  enable_mouse();
   io_out8(PIC0_IMR, 0xf9);
+  io_out8(PIC1_IMR, 0xef);
   io_sti();
 
   init_palette();
