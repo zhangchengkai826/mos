@@ -24,6 +24,7 @@ void main() {
   init_idt(idt);
   init_pic();
   set_gatedesc(idt+0x21, (unsigned)asm_inthandler21, 1 << 3, AR_INTGATE32);
+  init_keyboard();
   io_out8(PIC0_IMR, 0xf9);
   io_sti();
 
