@@ -1,6 +1,5 @@
-typedef unsigned char uint8;
-typedef unsigned short uint16;
-typedef unsigned uint32;
+#ifndef _LOWLEVEL_H
+#define _LOWLEVEL_H
 
 #define ADR_BOOTINFO 0x0ff0
 
@@ -19,12 +18,29 @@ typedef unsigned uint32;
 
 #define AR_INTGATE32 0x8e
 
+struct BOOTINFO {
+  unsigned char cyls, leds, vmode, reserve;
+  unsigned short scrnx, scrny;
+  unsigned char *vram;
+};
+
+struct GATE_DESCRIPTOR {
+  unsigned short offset_low, selector;
+  unsigned char zero, access_right;
+  unsigned short offset_high;
+};
+
 void hlt();
 void io_cli();
 void io_sti();
-uint32 io_load_eflags();
-void io_store_eflags(uint32 eflags);
-uint8 io_in8(uint16 port);
-void io_out8(uint16 port, uint8 data);
-void load_idtr(uint16 limit, uint32 addr);
+unsigned io_load_eflags();
+void io_store_eflags(unsigned eflags);
+unsigned char io_in8(unsigned short port);
+void io_out8(unsigned short port, unsigned char data);
+void load_idtr(unsigned short limit, unsigned addr);
+void write_mem8(unsigned addr, unsigned char data);
+void init_pic();
+void set_gatedesc(struct GATE_DESCRIPTOR *gd, unsigned offset, unsigned short selector, unsigned char ar);
+void init_idt(struct GATE_DESCRIPTOR *idt);
 
+#endif /* _LOWLEVEL_H */

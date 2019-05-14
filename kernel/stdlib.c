@@ -22,3 +22,9 @@ int u2s(char buf[], unsigned val) {
   return i;
 }
 
+void memcpy(unsigned char *dest, unsigned char *src, int size) {
+  int i;
+  for(i = 0; i < size; i++)
+    dest[i] = src[i];
+}
+
