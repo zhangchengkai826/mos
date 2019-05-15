@@ -14,5 +14,7 @@ int fifo8_status(struct FIFO8 *fifo);
 /* stdlib.c */
 int u2s(char buf[], unsigned val);
 void memcpy(unsigned char *dest, unsigned char *src, int size);
+int strlen(const char *s);
+void sprintf(char *buf, const char *format, ...);
 
 #endif /* _STDLIB_H */

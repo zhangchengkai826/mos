@@ -28,3 +28,32 @@ void memcpy(unsigned char *dest, unsigned char *src, int size) {
     dest[i] = src[i];
 }
 
+int strlen(const char *s) {
+  const char *p = s;
+  int n = 0;
+  while(p++) n++;
+  return n;
+}
+
+void sprintf(char *buf, const char *format, ...) {
+  const char *p = format;
+  char *q = buf;
+  unsigned char *a = (unsigned char *)&format;
+  while(p) {
+    if(*p == '%') {
+      ++p;
+      if(*p == 'u') {
+        a += 4;
+        u2s(q, *(unsigned *)a);
+        ++p;
+        continue;
+      }
+      --p;
+    }
+    *q = *p;
+    p++;
+    q++;
+  }
+  *q = '\0';
+}
+
