@@ -46,5 +46,6 @@ void init_idt(struct GATE_DESCRIPTOR *idt);
 unsigned load_cr0();
 void store_cr0(unsigned cr0);
 unsigned memtest(unsigned int start, unsigned int end);
+void unlock_large_mem();
 
 #endif /* _LOWLEVEL_H */

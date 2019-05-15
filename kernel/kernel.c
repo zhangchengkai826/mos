@@ -48,7 +48,7 @@ void main() {
   my = binfo->scrny / 2 - 8;
   putfont8(binfo->vram, binfo->scrnx, mx, my, COL8_FFFFFF, mcursor);
 
-  memsz = memtest(0x00002000, 0xbfffffff);
+  memsz = memtest(0x00400000, 0xbfffffff);
   u2s(s, memsz);
   putfonts8_asc(binfo->vram, binfo->scrnx, 0, 50, COL8_FFFFFF, s);
 
