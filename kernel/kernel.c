@@ -3,6 +3,7 @@
 #include "fonts.h"
 #include "keyboard.h"
 #include "mouse.h"
+#include "mem.h"
 #include "stdlib.h"
 
 void init_screen(unsigned char *vram, int xsize, int ysize) {
