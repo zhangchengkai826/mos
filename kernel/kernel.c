@@ -20,6 +20,7 @@ void main() {
   struct GATE_DESCRIPTOR idt[256];
   struct BOOTINFO *binfo = (struct BOOTINFO *)ADR_BOOTINFO;
   unsigned char keybuf[32], mousebuf[128];
+  struct MOUSE_DEC mdec;
 
   io_cli();
   init_idt(idt);
@@ -29,7 +30,7 @@ void main() {
   fifo8_init(&keyfifo, 32, keybuf);
   fifo8_init(&mousefifo, 128, mousebuf);
   init_keyboard();
-  enable_mouse();
+  enable_mouse(&mdec);
   io_out8(PIC0_IMR, 0xf9);
   io_out8(PIC1_IMR, 0xef);
   io_sti();
@@ -57,9 +58,15 @@ void main() {
       } else if(fifo8_status(&mousefifo) != 0) {
         i = fifo8_get(&mousefifo);
         io_sti();
-        u2s(s, i);
-        boxfill8(binfo->vram, binfo->scrnx, COL8_848400, 128, 0, 192, 32);
-        putfonts8_asc(binfo->vram, binfo->scrnx, 128, 0, COL8_FFFFFF, s);
+        if(mouse_decode(&mdec, i) != 0) {
+          boxfill8(binfo->vram, binfo->scrnx, COL8_848400, 128, 0, 300, 32);
+          u2s(s, mdec.buf[0]);
+          putfonts8_asc(binfo->vram, binfo->scrnx, 130, 0, COL8_FFFFFF, s);
+          u2s(s, mdec.buf[1]);
+          putfonts8_asc(binfo->vram, binfo->scrnx, 200, 0, COL8_FFFFFF, s);
+          u2s(s, mdec.buf[2]);
+          putfonts8_asc(binfo->vram, binfo->scrnx, 270, 0, COL8_FFFFFF, s);
+        }
       }
     }
   }
