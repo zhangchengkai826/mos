@@ -48,8 +48,8 @@ void main() {
   memtotal = memtest(memstart, 0xbfffffff);
   memman_init(memman);
   memman_free(memman, memstart, memtotal-memstart);
-  /*sprintf(s, "memory %uKB, free %uKB", memtotal / 1024, memman_total(memman) / 1024);
-  putfonts8_asc(binfo->vram, binfo->scrnx, 0, 150, COL8_FFFF00, s);*/
+  sprintf(s, "memory %uKB, free %uKB", memtotal / 1024, memman_total(memman) / 1024);
+  putfonts8_asc(binfo->vram, binfo->scrnx, 0, 150, COL8_FFFF00, s);
 
   init_palette();
   init_screen(binfo->vram, binfo->scrnx, binfo->scrny);

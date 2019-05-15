@@ -31,7 +31,10 @@ void memcpy(unsigned char *dest, unsigned char *src, int size) {
 int strlen(const char *s) {
   const char *p = s;
   int n = 0;
-  while(p++) n++;
+  while(*p) {
+    n++;
+    p++;
+  }
   return n;
 }
 
@@ -39,12 +42,12 @@ void sprintf(char *buf, const char *format, ...) {
   const char *p = format;
   char *q = buf;
   unsigned char *a = (unsigned char *)&format;
-  while(p) {
+  while(*p) {
     if(*p == '%') {
       ++p;
       if(*p == 'u') {
         a += 4;
-        u2s(q, *(unsigned *)a);
+        q += u2s(q, *(unsigned *)a);
         ++p;
         continue;
       }
