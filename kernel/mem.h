@@ -17,6 +17,8 @@ void memman_init(struct MEMMAN *man);
 unsigned memman_total(struct MEMMAN *man);
 unsigned memman_alloc(struct MEMMAN *man, unsigned size);
 int memman_free(struct MEMMAN *man, unsigned addr, unsigned size);
+unsigned memman_alloc_4k(struct MEMMAN *man, unsigned size);
+int memman_free_4k(struct MEMMAN *man, unsigned addr, unsigned size);
 
 #endif /* _MEM_H */
 
