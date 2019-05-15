@@ -43,5 +43,8 @@ void write_mem8(unsigned addr, unsigned char data);
 void init_pic();
 void set_gatedesc(struct GATE_DESCRIPTOR *gd, unsigned offset, unsigned short selector, unsigned char ar);
 void init_idt(struct GATE_DESCRIPTOR *idt);
+unsigned load_cr0();
+void store_cr0(unsigned cr0);
+unsigned memtest(unsigned int start, unsigned int end);
 
 #endif /* _LOWLEVEL_H */

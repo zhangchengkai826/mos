@@ -55,3 +55,19 @@ void init_idt(struct GATE_DESCRIPTOR *idt) {
   load_idtr(0x7ff, (unsigned)idt);
 }
 
+#define CR0_CACHE_DISABLE 0x60000000
+unsigned memtest_sub(unsigned start, unsigned end);
+unsigned memtest(unsigned start, unsigned end) {
+  unsigned cr0, i;
+  cr0 = load_cr0();
+  cr0 |= CR0_CACHE_DISABLE;
+  store_cr0(cr0);
+
+  i = memtest_sub(start, end);
+
+  cr0 = load_cr0();
+  cr0 &= ~CR0_CACHE_DISABLE;
+  store_cr0(cr0);
+  return i;
+}
+

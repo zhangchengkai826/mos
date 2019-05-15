@@ -24,6 +24,7 @@ void main() {
   int mx, my;
   unsigned char mcursor[16];
   unsigned char i;
+  unsigned memsz;
   char s[8];
 
   io_cli();
@@ -46,6 +47,10 @@ void main() {
   mx = binfo->scrnx / 2 - 4;
   my = binfo->scrny / 2 - 8;
   putfont8(binfo->vram, binfo->scrnx, mx, my, COL8_FFFFFF, mcursor);
+
+  memsz = memtest(0x00002000, 0xbfffffff);
+  u2s(s, memsz);
+  putfonts8_asc(binfo->vram, binfo->scrnx, 0, 50, COL8_FFFFFF, s);
 
   for(;;) {
     io_cli();
