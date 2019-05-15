@@ -4,7 +4,8 @@
 #include "stdlib.h"
 
 struct MOUSE_DEC {
-  unsigned char buf[3], phase;
+  unsigned char buf[3], phase, btn;
+  int x, y;
 };
 
 extern struct FIFO8 mousefifo;

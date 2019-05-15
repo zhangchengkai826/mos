@@ -42,6 +42,15 @@ int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat) {
   if(mdec->phase == 3) {
     mdec->buf[2] = dat;
     mdec->phase = 1;
+    mdec->btn = mdec->buf[0] & 0x07;
+    mdec->x = (int)mdec->buf[1];
+    mdec->y = (int)mdec->buf[2];
+    /* make sure large unsigned char is converted to negative int */
+    if(mdec->buf[0] & 0x10)
+      mdec->x |= 0xffffff00; 
+    if(mdec->buf[0] & 0x20)
+      mdec->y |= 0xffffff00;
+    mdec->y *= -1;
     return 1;
   }
   return -1;

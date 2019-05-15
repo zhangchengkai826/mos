@@ -21,6 +21,10 @@ void main() {
   struct BOOTINFO *binfo = (struct BOOTINFO *)ADR_BOOTINFO;
   unsigned char keybuf[32], mousebuf[128];
   struct MOUSE_DEC mdec;
+  int mx, my;
+  unsigned char mcursor[16];
+  unsigned char i;
+  char s[8];
 
   io_cli();
   init_idt(idt);
@@ -38,12 +42,11 @@ void main() {
   init_palette();
   init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
 
-  unsigned char mcursor[16];
   init_mouse_cursor8(mcursor);
-  putfont8(binfo->vram, binfo->scrnx, 100, 125, COL8_FFFFFF, mcursor);
+  mx = binfo->scrnx / 2 - 4;
+  my = binfo->scrny / 2 - 8;
+  putfont8(binfo->vram, binfo->scrnx, mx, my, COL8_FFFFFF, mcursor);
 
-  unsigned char i;
-  char s[8];
   for(;;) {
     io_cli();
     if(fifo8_status(&keyfifo) + fifo8_status(&mousefifo) == 0) {
@@ -66,6 +69,16 @@ void main() {
           putfonts8_asc(binfo->vram, binfo->scrnx, 200, 0, COL8_FFFFFF, s);
           u2s(s, mdec.buf[2]);
           putfonts8_asc(binfo->vram, binfo->scrnx, 270, 0, COL8_FFFFFF, s);
+          init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
+          mx += mdec.x;
+          my += mdec.y;
+          if(mx < 0) mx = 0;
+          if(my < 0) my = 0;
+          if(mx > binfo->scrnx - 8)
+            mx = binfo->scrnx - 8;
+          if(my > binfo->scrny - 16)
+            my = binfo->scrny - 16;
+          putfont8(binfo->vram, binfo->scrnx, mx, my, COL8_FFFFFF, mcursor);
         }
       }
     }
