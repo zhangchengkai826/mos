@@ -6,6 +6,8 @@
 #include "mem.h"
 #include "stdlib.h"
 
+#define MEMMAN_ADDR 0x100000
+
 void init_screen(unsigned char *vram, int xsize, int ysize) {
   boxfill8(vram, xsize, COL8_FF0000, 20, 20, 120, 120);
   putfonts8_asc(vram, xsize, 30, 40, COL8_00FFFF, "hello world!");
@@ -25,8 +27,9 @@ void main() {
   int mx, my;
   unsigned char mcursor[16];
   unsigned char i;
-  unsigned memsz;
-  char s[8];
+  char s[128];
+  struct MEMMAN *memman = (struct MEMMAN *)MEMMAN_ADDR;
+  unsigned memtotal, memstart;
 
   io_cli();
   init_idt(idt);
@@ -41,6 +44,11 @@ void main() {
   io_out8(PIC1_IMR, 0xef);
   io_sti();
 
+  memstart = (unsigned)MEMMAN_ADDR+sizeof(memman);
+  memtotal = memtest(memstart, 0xbfffffff);
+  memman_init(memman);
+  memman_free(memman, memstart, memtotal-memstart);
+
   init_palette();
   init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
 
@@ -48,10 +56,6 @@ void main() {
   mx = binfo->scrnx / 2 - 4;
   my = binfo->scrny / 2 - 8;
   putfont8(binfo->vram, binfo->scrnx, mx, my, COL8_FFFFFF, mcursor);
-
-  memsz = memtest(0x00100000, 0xbfffffff);
-  u2s(s, memsz);
-  putfonts8_asc(binfo->vram, binfo->scrnx, 0, 50, COL8_FFFFFF, s);
 
   for(;;) {
     io_cli();
