@@ -1,5 +1,4 @@
 #include "lowlevel.h"
-#include "keyboard.h"
 
 void hlt() {
   asm("hlt");
@@ -72,12 +71,4 @@ unsigned memtest(unsigned start, unsigned end) {
   return i;
 }
 
-#define KBC_OUTPUT_A20G_ENABLE 0xdf
-void unlock_large_mem() {
-  wait_KBC_sendready();
-  io_out8(PORT_KEYCMD, KEYCMD_WRITE_OUTPUT);
-  wait_KBC_sendready();
-  io_out8(PORT_KEYDAT, KBC_OUTPUT_A20G_ENABLE);
-  wait_KBC_sendready();
-}
 
