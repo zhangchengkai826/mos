@@ -10,6 +10,7 @@
 #define MEMMAN_ADDR 0x100000
 
 void init_screen8(unsigned char *vram, int xsize, int ysize) {
+  boxfill8(vram, xsize, COL8_848484, 0, 0, xsize, ysize);
   boxfill8(vram, xsize, COL8_FF0000, 20, 20, 120, 120);
   putfonts8_asc(vram, xsize, 30, 40, COL8_00FFFF, "hello world!");
 }
@@ -17,6 +18,7 @@ void init_screen8(unsigned char *vram, int xsize, int ysize) {
 void init_mouse_cursor8(unsigned char *vram) {
   int i;
   unsigned char d[] = {224, 240, 248, 254, 255, 255, 255, 252, 252, 220, 28, 14, 14, 6, 7, 3};
+  boxfill8(vram, 8, COL_TRANSPARENT, 0, 0, 8, 16);
   putfont8(vram, 8, 0, 0, COL8_FFFFFF, d);
 }
 
@@ -57,8 +59,8 @@ void main() {
   sht_back = sheet_alloc(shtctl);
   sht_mouse = sheet_alloc(shtctl);
   buf_back = (unsigned char *)memman_alloc_4k(memman, binfo->scrnx * binfo->scrny);
-  sheet_setbuf(sht_back, buf_back, binfo->scrnx, binfo->scrny, -1);
-  sheet_setbuf(sht_mouse, buf_mouse, 8, 16, -1);
+  sheet_setbuf(sht_back, buf_back, binfo->scrnx, binfo->scrny, COL_TRANSPARENT);
+  sheet_setbuf(sht_mouse, buf_mouse, 8, 16, COL_TRANSPARENT);
   init_screen8(buf_back, binfo->scrnx, binfo->scrny);
   init_mouse_cursor8(buf_mouse);
   sheet_slide(shtctl, sht_back, 0, 0);

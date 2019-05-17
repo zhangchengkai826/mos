@@ -17,6 +17,7 @@
 #define COL8_840084 13
 #define COL8_008484 14
 #define COL8_848484 15
+#define COL_TRANSPARENT 16
 
 void init_palette();
 void set_palette(int start, int end, unsigned char *rgb);
