@@ -4,19 +4,20 @@
 #include "keyboard.h"
 #include "mouse.h"
 #include "mem.h"
+#include "sheet.h"
 #include "stdlib.h"
 
 #define MEMMAN_ADDR 0x100000
 
-void init_screen(unsigned char *vram, int xsize, int ysize) {
+void init_screen8(unsigned char *vram, int xsize, int ysize) {
   boxfill8(vram, xsize, COL8_FF0000, 20, 20, 120, 120);
   putfonts8_asc(vram, xsize, 30, 40, COL8_00FFFF, "hello world!");
 }
 
-void init_mouse_cursor8(unsigned char *mouse) {
+void init_mouse_cursor8(unsigned char *vram) {
   int i;
   unsigned char d[] = {224, 240, 248, 254, 255, 255, 255, 252, 252, 220, 28, 14, 14, 6, 7, 3};
-  memcpy(mouse, d, 16);
+  putfont8(vram, 8, 0, 0, COL8_FFFFFF, d);
 }
 
 void main() {
@@ -25,11 +26,13 @@ void main() {
   unsigned char keybuf[32], mousebuf[128];
   struct MOUSE_DEC mdec;
   int mx, my;
-  unsigned char mcursor[16];
   unsigned char i;
   char s[128];
   struct MEMMAN *memman = (struct MEMMAN *)MEMMAN_ADDR;
   unsigned memtotal, memstart;
+  struct SHTCTL *shtctl;
+  struct SHEET *sht_back, *sht_mouse;
+  unsigned char *buf_back, buf_mouse[128];
 
   io_cli();
   init_idt(idt);
@@ -48,16 +51,26 @@ void main() {
   memtotal = memtest(memstart, 0xbfffffff);
   memman_init(memman);
   memman_free(memman, memstart, memtotal-memstart);
-  sprintf(s, "memory %uKB, free %uKB", memtotal / 1024, memman_total(memman) / 1024);
-  putfonts8_asc(binfo->vram, binfo->scrnx, 0, 150, COL8_FFFF00, s);
 
   init_palette();
-  init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
-
-  init_mouse_cursor8(mcursor);
+  shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
+  sht_back = sheet_alloc(shtctl);
+  sht_mouse = sheet_alloc(shtctl);
+  buf_back = (unsigned char *)memman_alloc_4k(memman, binfo->scrnx * binfo->scrny);
+  sheet_setbuf(sht_back, buf_back, binfo->scrnx, binfo->scrny, -1);
+  sheet_setbuf(sht_mouse, buf_mouse, 8, 16, -1);
+  init_screen8(buf_back, binfo->scrnx, binfo->scrny);
+  init_mouse_cursor8(buf_mouse);
+  sheet_slide(shtctl, sht_back, 0, 0);
   mx = binfo->scrnx / 2 - 4;
   my = binfo->scrny / 2 - 8;
-  putfont8(binfo->vram, binfo->scrnx, mx, my, COL8_FFFFFF, mcursor);
+  sheet_slide(shtctl, sht_mouse, mx, my);
+  sheet_updown(shtctl, sht_back, 0);
+  sheet_updown(shtctl, sht_mouse, 1);
+  
+  sprintf(s, "memory %uKB, free %uKB", memtotal / 1024, memman_total(memman) / 1024);
+  putfonts8_asc(buf_back, binfo->scrnx, 0, 150, COL8_FFFF00, s);
+  sheet_refresh(shtctl, sht_back, 0, 150, binfo->scrnx, 166);
 
   for(;;) {
     io_cli();
@@ -67,21 +80,19 @@ void main() {
       if(fifo8_status(&keyfifo) != 0) {
         i = fifo8_get(&keyfifo);
         io_sti();
-        u2s(s, i);
-        boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 0, 0, 64, 32);
-        putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
+        sprintf(s, "%u", i);
+        boxfill8(buf_back, binfo->scrnx, COL8_008484, 0, 0, 64, 32);
+        putfonts8_asc(buf_back, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
+        sheet_refresh(shtctl, sht_back, 0, 0, 64, 32);
       } else if(fifo8_status(&mousefifo) != 0) {
         i = fifo8_get(&mousefifo);
         io_sti();
         if(mouse_decode(&mdec, i) != 0) {
-          boxfill8(binfo->vram, binfo->scrnx, COL8_848400, 128, 0, 300, 32);
-          u2s(s, mdec.buf[0]);
-          putfonts8_asc(binfo->vram, binfo->scrnx, 130, 0, COL8_FFFFFF, s);
-          u2s(s, mdec.buf[1]);
-          putfonts8_asc(binfo->vram, binfo->scrnx, 200, 0, COL8_FFFFFF, s);
-          u2s(s, mdec.buf[2]);
-          putfonts8_asc(binfo->vram, binfo->scrnx, 270, 0, COL8_FFFFFF, s);
-          init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
+          boxfill8(buf_back, binfo->scrnx, COL8_848400, 128, 0, 300, 32);
+          sprintf(s, "%u %u %u", mdec.buf[0], mdec.buf[1], mdec.buf[2]);
+          putfonts8_asc(buf_back, binfo->scrnx, 128, 0, COL8_FFFFFF, s);
+          sheet_refresh(shtctl, sht_back, 128, 0, 300, 32);
+
           mx += mdec.x;
           my += mdec.y;
           if(mx < 0) mx = 0;
@@ -90,7 +101,7 @@ void main() {
             mx = binfo->scrnx - 8;
           if(my > binfo->scrny - 16)
             my = binfo->scrny - 16;
-          putfont8(binfo->vram, binfo->scrnx, mx, my, COL8_FFFFFF, mcursor);
+          sheet_slide(shtctl, sht_mouse, mx, my);
         }
       }
     }

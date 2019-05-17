@@ -1,6 +1,7 @@
+#include "sheet.h"
 #define SHEET_USE 1
 
-struct SHTCTL *shtctl_int(struct MEMMAN *memman, unsigned char *vram, int xsize, int ysize) {
+struct SHTCTL *shtctl_init(struct MEMMAN *memman, unsigned char *vram, int xsize, int ysize) {
   struct SHTCTL *ctl;
   int i;
   ctl = (struct SHTCTL *) memman_alloc_4k(memman, sizeof(struct SHTCTL));
@@ -20,8 +21,8 @@ struct SHEET *sheet_alloc(struct SHTCTL *ctl) {
   struct SHEET *sht;
   int i;
   for(i = 0; i < MAX_SHEETS; i++) {
-    if(ctl->sheets[0].flags == 0) {
-      sht = &ctl->sheets[i];
+    if(ctl->sheets0[i].flags == 0) {
+      sht = &ctl->sheets0[i];
       sht->flags = SHEET_USE;
       sht->height = -1;
       return sht;
@@ -101,7 +102,7 @@ void sheet_updown(struct SHTCTL *ctl, struct SHEET *sht, int height) {
     } else {
       for(h = ctl->top; h >= height; h--) {
         ctl->sheets[h+1] = ctl->sheets[h];
-        ctl->sheets[h+1].height = h+1;
+        ctl->sheets[h+1]->height = h+1;
       }
       ctl->sheets[height] = sht;
       ctl->top++;
@@ -119,7 +120,7 @@ void sheet_slide(struct SHTCTL *ctl, struct SHEET *sht, int vx0, int vy0) {
   int old_vx0 = sht->vx0, old_vy0 = sht->vy0;
   sht->vx0 = vx0;
   sht->vy0 = vy0;
-  if(sheet->height >= 0) {
+  if(sht->height >= 0) {
     sheet_refreshsub(ctl, old_vx0, old_vy0, old_vx0 + sht->bxsize, old_vy0 + sht->bysize);
     sheet_refreshsub(ctl, vx0, vy0, vx0 + sht->bxsize, vy0 + sht->bysize);
   }
