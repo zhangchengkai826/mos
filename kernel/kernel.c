@@ -10,8 +10,7 @@
 #define MEMMAN_ADDR 0x100000
 
 void init_screen8(unsigned char *vram, int xsize, int ysize) {
-  boxfill8(vram, xsize, COL8_848484, 0, 0, xsize, ysize);
-  boxfill8(vram, xsize, COL8_FF0000, 20, 20, 120, 120);
+  boxfill8(vram, xsize, COL8_000000, 0, 0, xsize, ysize);
   putfonts8_asc(vram, xsize, 30, 40, COL8_00FFFF, "hello world!");
 }
 
@@ -20,6 +19,12 @@ void init_mouse_cursor8(unsigned char *vram) {
   unsigned char d[] = {224, 240, 248, 254, 255, 255, 255, 252, 252, 220, 28, 14, 14, 6, 7, 3};
   boxfill8(vram, 8, COL_TRANSPARENT, 0, 0, 8, 16);
   putfont8(vram, 8, 0, 0, COL8_FFFFFF, d);
+}
+
+void make_window8(unsigned char *buf, int xsize, int ysize, char *title) {
+  boxfill8(buf, xsize, COL8_C6C6C6, 0, 0, xsize, ysize);
+  boxfill8(buf, xsize, COL8_848484, 0, 0, xsize, 20);
+  putfonts8_asc(buf, xsize, 2, 2, COL8_FFFFFF, title);
 }
 
 void main() {
@@ -33,8 +38,8 @@ void main() {
   struct MEMMAN *memman = (struct MEMMAN *)MEMMAN_ADDR;
   unsigned memtotal, memstart;
   struct SHTCTL *shtctl;
-  struct SHEET *sht_back, *sht_mouse;
-  unsigned char *buf_back, buf_mouse[128];
+  struct SHEET *sht_back, *sht_win, *sht_mouse;
+  unsigned char *buf_back, *buf_win, buf_mouse[128];
 
   io_cli();
   init_idt(idt);
@@ -55,20 +60,32 @@ void main() {
   memman_free(memman, memstart, memtotal-memstart);
 
   init_palette();
+
   shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
   sht_back = sheet_alloc(shtctl);
   sht_mouse = sheet_alloc(shtctl);
+  sht_win = sheet_alloc(shtctl);
+
   buf_back = (unsigned char *)memman_alloc_4k(memman, binfo->scrnx * binfo->scrny);
+  buf_win = (unsigned char *)memman_alloc_4k(memman, 160*68);
+
   sheet_setbuf(sht_back, buf_back, binfo->scrnx, binfo->scrny, COL_TRANSPARENT);
   sheet_setbuf(sht_mouse, buf_mouse, 8, 16, COL_TRANSPARENT);
+  sheet_setbuf(sht_win, buf_win, 160, 68, COL_TRANSPARENT);
+
   init_screen8(buf_back, binfo->scrnx, binfo->scrny);
   init_mouse_cursor8(buf_mouse);
+  make_window8(buf_win, 160, 68, "window");
+
   sheet_slide(sht_back, 0, 0);
   mx = binfo->scrnx / 2 - 4;
   my = binfo->scrny / 2 - 8;
   sheet_slide(sht_mouse, mx, my);
+  sheet_slide(sht_win, 80, 72);
+
   sheet_updown(sht_back, 0);
-  sheet_updown(sht_mouse, 1);
+  sheet_updown(sht_win, 1);
+  sheet_updown(sht_mouse, 2);
   
   sprintf(s, "memory %uKB, free %uKB", memtotal / 1024, memman_total(memman) / 1024);
   putfonts8_asc(buf_back, binfo->scrnx, 0, 150, COL8_FFFF00, s);
