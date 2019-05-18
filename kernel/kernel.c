@@ -63,16 +63,16 @@ void main() {
   sheet_setbuf(sht_mouse, buf_mouse, 8, 16, COL_TRANSPARENT);
   init_screen8(buf_back, binfo->scrnx, binfo->scrny);
   init_mouse_cursor8(buf_mouse);
-  sheet_slide(shtctl, sht_back, 0, 0);
+  sheet_slide(sht_back, 0, 0);
   mx = binfo->scrnx / 2 - 4;
   my = binfo->scrny / 2 - 8;
-  sheet_slide(shtctl, sht_mouse, mx, my);
-  sheet_updown(shtctl, sht_back, 0);
-  sheet_updown(shtctl, sht_mouse, 1);
+  sheet_slide(sht_mouse, mx, my);
+  sheet_updown(sht_back, 0);
+  sheet_updown(sht_mouse, 1);
   
   sprintf(s, "memory %uKB, free %uKB", memtotal / 1024, memman_total(memman) / 1024);
   putfonts8_asc(buf_back, binfo->scrnx, 0, 150, COL8_FFFF00, s);
-  sheet_refresh(shtctl, sht_back, 0, 150, binfo->scrnx, 166);
+  sheet_refresh(sht_back, 0, 150, binfo->scrnx, 166);
 
   for(;;) {
     io_cli();
@@ -85,7 +85,7 @@ void main() {
         sprintf(s, "%u", i);
         boxfill8(buf_back, binfo->scrnx, COL8_008484, 0, 0, 64, 32);
         putfonts8_asc(buf_back, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
-        sheet_refresh(shtctl, sht_back, 0, 0, 64, 32);
+        sheet_refresh(sht_back, 0, 0, 64, 32);
       } else if(fifo8_status(&mousefifo) != 0) {
         i = fifo8_get(&mousefifo);
         io_sti();
@@ -93,17 +93,17 @@ void main() {
           boxfill8(buf_back, binfo->scrnx, COL8_848400, 128, 0, 300, 32);
           sprintf(s, "%u %u %u", mdec.buf[0], mdec.buf[1], mdec.buf[2]);
           putfonts8_asc(buf_back, binfo->scrnx, 128, 0, COL8_FFFFFF, s);
-          sheet_refresh(shtctl, sht_back, 128, 0, 300, 32);
+          sheet_refresh(sht_back, 128, 0, 300, 32);
 
           mx += mdec.x;
           my += mdec.y;
           if(mx < 0) mx = 0;
           if(my < 0) my = 0;
-          if(mx > binfo->scrnx - 8)
-            mx = binfo->scrnx - 8;
-          if(my > binfo->scrny - 16)
-            my = binfo->scrny - 16;
-          sheet_slide(shtctl, sht_mouse, mx, my);
+          if(mx > binfo->scrnx - 1)
+            mx = binfo->scrnx - 1;
+          if(my > binfo->scrny - 1)
+            my = binfo->scrny - 1;
+          sheet_slide(sht_mouse, mx, my);
         }
       }
     }
