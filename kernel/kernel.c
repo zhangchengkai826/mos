@@ -7,8 +7,6 @@
 #include "sheet.h"
 #include "stdlib.h"
 
-
-
 void init_screen8(unsigned char *vram, int xsize, int ysize) {
   boxfill8(vram, xsize, COL8_000000, 0, 0, xsize, ysize);
   putfonts8_asc(vram, xsize, 30, 40, COL8_00FFFF, "hello world!");
@@ -89,7 +87,14 @@ void main() {
   
   sprintf(s, "memory %uKB, free %uKB", memtotal / 1024, memman_total(memman) / 1024);
   putfonts8_asc(buf_back, binfo->scrnx, 0, 150, COL8_FFFF00, s);
-  sheet_refresh(sht_back, 0, 150, binfo->scrnx, 166);
+  /* debug start */
+  sprintf(s, "[1]a:%u, s:%u", memman->free[0].addr, memman->free[0].size);
+  putfonts8_asc(buf_back, binfo->scrnx, 0, 166, COL8_FFFF00, s);
+  unsigned atmp = memman_alloc_4k(memman, 1);
+  sprintf(s, "[2]a:%u, t:%u", memman->free[0].addr, atmp);
+  putfonts8_asc(buf_back, binfo->scrnx, 0, 182, COL8_FFFF00, s);
+  /* debug end */
+  sheet_refresh(sht_back, 0, 150, binfo->scrnx, 198);
 
   for(;;) {
     io_cli();
