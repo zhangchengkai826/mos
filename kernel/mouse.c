@@ -1,6 +1,7 @@
 #include "mouse.h"
 #include "keyboard.h"
 #include "lowlevel.h"
+#include "mem.h"
 
 #define KEYCMD_SENDTO_MOUSE 0xd4
 #define MOUSECMD_ENABLE 0xf4
@@ -13,13 +14,13 @@ void enable_mouse(struct MOUSE_DEC *mdec) {
   mdec->phase = 0;
 }
 
-struct FIFO8 mousefifo;
+struct FIFO8 *mousefifo = (struct FIFO8 *)MOUSEFIFO_ADDR;
 void inthandler2c(int *esp) {
   unsigned char data;
   io_out8(PIC1_OCW2, 0x64);
   io_out8(PIC0_OCW2, 0x62);
   data = io_in8(PORT_KEYDAT);
-  fifo8_put(&mousefifo, data);
+  fifo8_put(mousefifo, data);
 }
 
 int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat) {

@@ -1,6 +1,9 @@
 #ifndef _MEM_H
 #define _MEM_H
 
+#define KEYFIFO_ADDR 0x400000
+#define MOUSEFIFO_ADDR (KEYFIFO_ADDR+sizeof(struct FIFO8))
+#define MEMMAN_ADDR (MOUSEFIFO_ADDR+sizeof(struct FIFO8))
 #define MEMMAN_FREES 4090
 
 struct FREEINFO {

@@ -35,7 +35,7 @@ unsigned memman_alloc(struct MEMMAN *man, unsigned size) {
   unsigned i, a;
   for(i = 0; i < man->frees; i++) {
     if(man->free[i].size >= size) {
-      a = man->free[i].addr;
+      a = man->free[i].addr += size;
       man->free[i].addr += size;
       man->free[i].size -= size;
       if(man->free[i].size == 0) {

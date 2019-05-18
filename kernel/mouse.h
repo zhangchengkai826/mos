@@ -8,7 +8,7 @@ struct MOUSE_DEC {
   int x, y;
 };
 
-extern struct FIFO8 mousefifo;
+extern struct FIFO8 *mousefifo;
 void enable_mouse(struct MOUSE_DEC *mdec);
 void asm_inthandler2c();
 void inthandler2c(int *esp);

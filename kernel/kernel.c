@@ -7,7 +7,7 @@
 #include "sheet.h"
 #include "stdlib.h"
 
-#define MEMMAN_ADDR 0x100000
+
 
 void init_screen8(unsigned char *vram, int xsize, int ysize) {
   boxfill8(vram, xsize, COL8_000000, 0, 0, xsize, ysize);
@@ -46,8 +46,8 @@ void main() {
   init_pic();
   set_gatedesc(idt+0x21, (unsigned)asm_inthandler21, 1 << 3, AR_INTGATE32);
   set_gatedesc(idt+0x2c, (unsigned)asm_inthandler2c, 1 << 3, AR_INTGATE32);
-  fifo8_init(&keyfifo, 32, keybuf);
-  fifo8_init(&mousefifo, 128, mousebuf);
+  fifo8_init(keyfifo, 32, keybuf);
+  fifo8_init(mousefifo, 128, mousebuf);
   init_keyboard();
   enable_mouse(&mdec);
   io_out8(PIC0_IMR, 0xf9);
@@ -93,18 +93,18 @@ void main() {
 
   for(;;) {
     io_cli();
-    if(fifo8_status(&keyfifo) + fifo8_status(&mousefifo) == 0) {
+    if(fifo8_status(keyfifo) + fifo8_status(mousefifo) == 0) {
       io_stihlt();
     } else {
-      if(fifo8_status(&keyfifo) != 0) {
-        i = fifo8_get(&keyfifo);
+      if(fifo8_status(keyfifo) != 0) {
+        i = fifo8_get(keyfifo);
         io_sti();
         sprintf(s, "%u", i);
         boxfill8(buf_back, binfo->scrnx, COL8_008484, 0, 0, 64, 32);
         putfonts8_asc(buf_back, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
         sheet_refresh(sht_back, 0, 0, 64, 32);
-      } else if(fifo8_status(&mousefifo) != 0) {
-        i = fifo8_get(&mousefifo);
+      } else if(fifo8_status(mousefifo) != 0) {
+        i = fifo8_get(mousefifo);
         io_sti();
         if(mouse_decode(&mdec, i) != 0) {
           boxfill8(buf_back, binfo->scrnx, COL8_848400, 128, 0, 300, 32);

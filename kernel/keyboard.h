@@ -15,6 +15,6 @@ void inthandler21(int *esp);
 void wait_KBC_sendready();
 void init_keyboard();
 
-extern struct FIFO8 keyfifo;
+extern struct FIFO8 *keyfifo;
 
 #endif /* _KEYBOARD_H */
