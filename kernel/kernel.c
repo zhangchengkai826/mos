@@ -5,6 +5,7 @@
 #include "mouse.h"
 #include "mem.h"
 #include "sheet.h"
+#include "timer.h"
 #include "stdlib.h"
 
 void init_screen8(unsigned char *vram, int xsize, int ysize) {
@@ -45,6 +46,8 @@ void main() {
   io_cli();
   init_idt(idt);
   init_pic();
+  init_pit();
+  set_gatedesc(idt+0x20, (unsigned)asm_inthandler20, 1 << 3, AR_INTGATE32);
   set_gatedesc(idt+0x21, (unsigned)asm_inthandler21, 1 << 3, AR_INTGATE32);
   set_gatedesc(idt+0x2c, (unsigned)asm_inthandler2c, 1 << 3, AR_INTGATE32);
   fifo8_init(keyfifo, 32, keybuf);
