@@ -52,7 +52,7 @@ void main() {
   io_out8(PIC1_IMR, 0xef);
   io_sti();
 
-  memstart = (unsigned)MEMMAN_ADDR+sizeof(memman);
+  memstart = ((unsigned)MEMMAN_ADDR+sizeof(struct MEMMAN)+0xfff)&0xfffff000;
   memtotal = memtest(memstart, 0xbfffffff);
   memman_init(memman);
   memman_free(memman, memstart, memtotal-memstart);
@@ -88,7 +88,7 @@ void main() {
   sprintf(s, "memory %uKB, free %uKB", memtotal / 1024, memman_total(memman) / 1024);
   putfonts8_asc(buf_back, binfo->scrnx, 0, 150, COL8_FFFF00, s);
   /* debug start */
-  sprintf(s, "[1]a:%u, s:%u", memman->free[0].addr, memman->free[0].size);
+  sprintf(s, "[1]a:%u, s:%u", memman->free[0].addr, memstart);
   putfonts8_asc(buf_back, binfo->scrnx, 0, 166, COL8_FFFF00, s);
   unsigned atmp = memman_alloc_4k(memman, 1);
   sprintf(s, "[2]a:%u, t:%u", memman->free[0].addr, atmp);
