@@ -31,6 +31,7 @@ void main() {
   struct BOOTINFO *binfo = (struct BOOTINFO *)ADR_BOOTINFO;
   struct FIFO8 *keyfifo = (struct FIFO8 *)KEYFIFO_ADDR;
   struct FIFO8 *mousefifo = (struct FIFO8 *)MOUSEFIFO_ADDR;
+  struct TIMERCTL *timerctl = (struct TIMERCTL *)TIMERCTL_ADDR;
   unsigned char keybuf[32], mousebuf[128];
   struct MOUSE_DEC mdec;
   int mx, my;
@@ -41,7 +42,6 @@ void main() {
   struct SHTCTL *shtctl;
   struct SHEET *sht_back, *sht_win, *sht_mouse;
   unsigned char *buf_back, *buf_win, buf_mouse[128];
-  unsigned count = 0;
 
   io_cli();
   init_idt(idt);
@@ -54,7 +54,7 @@ void main() {
   fifo8_init(mousefifo, 128, mousebuf);
   init_keyboard();
   enable_mouse(&mdec);
-  io_out8(PIC0_IMR, 0xf9);
+  io_out8(PIC0_IMR, 0xf8);
   io_out8(PIC1_IMR, 0xef);
   io_sti();
 
@@ -103,8 +103,7 @@ void main() {
   sheet_refresh(sht_back, 0, 150, binfo->scrnx, 198);
 
   for(;;) {
-    count++;
-    sprintf(s, "%u", count);
+    sprintf(s, "%u", timerctl->count);
     boxfill8(buf_win, 160, COL8_C6C6C6, 40, 28, 120, 44);
     putfonts8_asc(buf_win, 160, 40, 28, COL8_000000, s);
     sheet_refresh(sht_win, 40, 28, 120, 44);
