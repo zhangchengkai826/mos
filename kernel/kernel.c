@@ -32,7 +32,7 @@ void main() {
   struct FIFO8 *keyfifo = (struct FIFO8 *)KEYFIFO_ADDR;
   struct FIFO8 *mousefifo = (struct FIFO8 *)MOUSEFIFO_ADDR;
   struct TIMERCTL *timerctl = (struct TIMERCTL *)TIMERCTL_ADDR;
-  unsigned char keybuf[32], mousebuf[128], timerbuf[8];
+  unsigned char keybuf[32], mousebuf[128], timerbuf[8], timerbuf2[8], timerbuf3[8];
   struct MOUSE_DEC mdec;
   int mx, my;
   unsigned char i;
@@ -42,7 +42,8 @@ void main() {
   struct SHTCTL *shtctl;
   struct SHEET *sht_back, *sht_win, *sht_mouse;
   unsigned char *buf_back, *buf_win, buf_mouse[128];
-  struct FIFO8 timerfifo;
+  struct FIFO8 timerfifo, timerfifo2, timerfifo3;
+  struct TIMER *timer, *timer2, *timer3;
 
   io_cli();
   init_idt(idt);
@@ -86,7 +87,7 @@ void main() {
   mx = binfo->scrnx / 2 - 4;
   my = binfo->scrny / 2 - 8;
   sheet_slide(sht_mouse, mx, my);
-  sheet_slide(sht_win, 80, 72);
+  sheet_slide(sht_win, 140, 72);
 
   sheet_updown(sht_back, 0);
   sheet_updown(sht_win, 1);
@@ -104,7 +105,17 @@ void main() {
   sheet_refresh(sht_back, 0, 150, binfo->scrnx, 198);
 
   fifo8_init(&timerfifo, 8, timerbuf);
-  settimer(10000, &timerfifo, 1);
+  timer = timer_alloc();
+  timer_init(timer, &timerfifo, 1);
+  timer_settime(timer, 10000);
+  fifo8_init(&timerfifo2, 8, timerbuf2);
+  timer2 = timer_alloc();
+  timer_init(timer2, &timerfifo2, 1);
+  timer_settime(timer2, 5000);
+  fifo8_init(&timerfifo3, 8, timerbuf3);
+  timer3 = timer_alloc();
+  timer_init(timer3, &timerfifo3, 1);
+  timer_settime(timer3, 3000);
 
   for(;;) {
     sprintf(s, "%u", timerctl->count);
@@ -113,7 +124,7 @@ void main() {
     sheet_refresh(sht_win, 40, 28, 120, 44);
 
     io_cli();
-    if(fifo8_status(keyfifo) + fifo8_status(mousefifo) + fifo8_status(&timerfifo) == 0) {
+    if(fifo8_status(keyfifo) + fifo8_status(mousefifo) + fifo8_status(&timerfifo) + fifo8_status(&timerfifo2) + fifo8_status(&timerfifo3) == 0) {
       io_sti();
     } else {
       if(fifo8_status(keyfifo) != 0) {
@@ -145,10 +156,27 @@ void main() {
       } else if(fifo8_status(&timerfifo) != 0) {
         i = fifo8_get(&timerfifo);
         io_sti();
-        putfonts8_asc(buf_back, binfo->scrnx, 0, 64, COL8_FFFFFF, "triggered!");
+        putfonts8_asc(buf_back, binfo->scrnx, 0, 64, COL8_FFFFFF, "10000 ticks");
         sheet_refresh(sht_back, 0, 64, binfo->scrnx, 80);
+      } else if(fifo8_status(&timerfifo2) != 0) {
+        i = fifo8_get(&timerfifo2);
+        io_sti();
+        putfonts8_asc(buf_back, binfo->scrnx, 0, 80, COL8_FFFFFF, "50000 ticks");
+        sheet_refresh(sht_back, 0, 80, binfo->scrnx, 96);
+      } else if(fifo8_status(&timerfifo3) != 0) {
+          i = fifo8_get(&timerfifo3);
+          io_sti();
+          if(i != 0) {
+            timer_init(timer3, &timerfifo3, 0);
+            boxfill8(buf_back, binfo->scrnx, COL8_FFFFFF, 8, 96, 16, 112);
+          } else {
+            timer_init(timer3, &timerfifo3, 1);
+            boxfill8(buf_back, binfo->scrnx, COL8_000000, 8, 96, 16, 112);
+          }
+          timer_settime(timer3, 3000);
+          sheet_refresh(sht_back, 8, 96, 16, 112);
       }
-    }
+    } 
   }
 }
 
