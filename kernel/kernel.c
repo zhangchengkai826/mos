@@ -38,6 +38,7 @@ void main() {
   struct SHTCTL *shtctl;
   struct SHEET *sht_back, *sht_win, *sht_mouse;
   unsigned char *buf_back, *buf_win, buf_mouse[128];
+  unsigned count = 0;
 
   io_cli();
   init_idt(idt);
@@ -87,19 +88,26 @@ void main() {
   
   sprintf(s, "memory %uKB, free %uKB", memtotal / 1024, memman_total(memman) / 1024);
   putfonts8_asc(buf_back, binfo->scrnx, 0, 150, COL8_FFFF00, s);
-  /* debug start */
+  /* debug start 
   sprintf(s, "[1]a:%u, s:%u", memman->free[0].addr, memstart);
   putfonts8_asc(buf_back, binfo->scrnx, 0, 166, COL8_FFFF00, s);
   unsigned atmp = memman_alloc_4k(memman, 1);
   sprintf(s, "[2]a:%u, t:%u", memman->free[0].addr, atmp);
   putfonts8_asc(buf_back, binfo->scrnx, 0, 182, COL8_FFFF00, s);
-  /* debug end */
+  debug end */
   sheet_refresh(sht_back, 0, 150, binfo->scrnx, 198);
 
   for(;;) {
+    count++;
+    sprintf(s, "%u", count);
+    boxfill8(buf_win, 160, COL8_C6C6C6, 40, 28, 120, 44);
+    putfonts8_asc(buf_win, 160, 40, 28, COL8_000000, s);
+
+    sheet_refresh(sht_win, 40, 28, 120, 44);
+
     io_cli();
     if(fifo8_status(keyfifo) + fifo8_status(mousefifo) == 0) {
-      io_stihlt();
+      io_sti();
     } else {
       if(fifo8_status(keyfifo) != 0) {
         i = fifo8_get(keyfifo);
