@@ -28,6 +28,8 @@ void make_window8(unsigned char *buf, int xsize, int ysize, char *title) {
 void main() {
   struct GATE_DESCRIPTOR idt[256];
   struct BOOTINFO *binfo = (struct BOOTINFO *)ADR_BOOTINFO;
+  struct FIFO8 *keyfifo = (struct FIFO8 *)KEYFIFO_ADDR;
+  struct FIFO8 *mousefifo = (struct FIFO8 *)MOUSEFIFO_ADDR;
   unsigned char keybuf[32], mousebuf[128];
   struct MOUSE_DEC mdec;
   int mx, my;
@@ -88,13 +90,13 @@ void main() {
   
   sprintf(s, "memory %uKB, free %uKB", memtotal / 1024, memman_total(memman) / 1024);
   putfonts8_asc(buf_back, binfo->scrnx, 0, 150, COL8_FFFF00, s);
-  /* debug start 
-  sprintf(s, "[1]a:%u, s:%u", memman->free[0].addr, memstart);
+  /* debug start */
+  sprintf(s, "[1]a:%u, s:%u", MOUSEFIFO_ADDR, (unsigned)mousefifo);
   putfonts8_asc(buf_back, binfo->scrnx, 0, 166, COL8_FFFF00, s);
   unsigned atmp = memman_alloc_4k(memman, 1);
   sprintf(s, "[2]a:%u, t:%u", memman->free[0].addr, atmp);
   putfonts8_asc(buf_back, binfo->scrnx, 0, 182, COL8_FFFF00, s);
-  debug end */
+  /* debug end */
   sheet_refresh(sht_back, 0, 150, binfo->scrnx, 198);
 
   for(;;) {
@@ -102,7 +104,6 @@ void main() {
     sprintf(s, "%u", count);
     boxfill8(buf_win, 160, COL8_C6C6C6, 40, 28, 120, 44);
     putfonts8_asc(buf_win, 160, 40, 28, COL8_000000, s);
-
     sheet_refresh(sht_win, 40, 28, 120, 44);
 
     io_cli();
