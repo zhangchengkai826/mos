@@ -32,7 +32,7 @@ void main() {
   struct FIFO8 *keyfifo = (struct FIFO8 *)KEYFIFO_ADDR;
   struct FIFO8 *mousefifo = (struct FIFO8 *)MOUSEFIFO_ADDR;
   struct TIMERCTL *timerctl = (struct TIMERCTL *)TIMERCTL_ADDR;
-  unsigned char keybuf[32], mousebuf[128];
+  unsigned char keybuf[32], mousebuf[128], timerbuf[8];
   struct MOUSE_DEC mdec;
   int mx, my;
   unsigned char i;
@@ -42,6 +42,7 @@ void main() {
   struct SHTCTL *shtctl;
   struct SHEET *sht_back, *sht_win, *sht_mouse;
   unsigned char *buf_back, *buf_win, buf_mouse[128];
+  struct FIFO8 timerfifo;
 
   io_cli();
   init_idt(idt);
@@ -93,14 +94,17 @@ void main() {
   
   sprintf(s, "memory %uKB, free %uKB", memtotal / 1024, memman_total(memman) / 1024);
   putfonts8_asc(buf_back, binfo->scrnx, 0, 150, COL8_FFFF00, s);
-  /* debug start */
+  /* debug start 
   sprintf(s, "[1]a:%u, s:%u", MOUSEFIFO_ADDR, (unsigned)mousefifo);
   putfonts8_asc(buf_back, binfo->scrnx, 0, 166, COL8_FFFF00, s);
   unsigned atmp = memman_alloc_4k(memman, 1);
   sprintf(s, "[2]a:%u, t:%u", memman->free[0].addr, atmp);
   putfonts8_asc(buf_back, binfo->scrnx, 0, 182, COL8_FFFF00, s);
-  /* debug end */
+  debug end */
   sheet_refresh(sht_back, 0, 150, binfo->scrnx, 198);
+
+  fifo8_init(&timerfifo, 8, timerbuf);
+  settimer(10000, &timerfifo, 1);
 
   for(;;) {
     sprintf(s, "%u", timerctl->count);
@@ -109,7 +113,7 @@ void main() {
     sheet_refresh(sht_win, 40, 28, 120, 44);
 
     io_cli();
-    if(fifo8_status(keyfifo) + fifo8_status(mousefifo) == 0) {
+    if(fifo8_status(keyfifo) + fifo8_status(mousefifo) + fifo8_status(&timerfifo) == 0) {
       io_sti();
     } else {
       if(fifo8_status(keyfifo) != 0) {
@@ -138,8 +142,14 @@ void main() {
             my = binfo->scrny - 1;
           sheet_slide(sht_mouse, mx, my);
         }
+      } else if(fifo8_status(&timerfifo) != 0) {
+        i = fifo8_get(&timerfifo);
+        io_sti();
+        putfonts8_asc(buf_back, binfo->scrnx, 0, 64, COL8_FFFFFF, "triggered!");
+        sheet_refresh(sht_back, 0, 64, binfo->scrnx, 80);
       }
     }
   }
 }
+
 
