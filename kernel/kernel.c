@@ -161,7 +161,7 @@ void main() {
       } else if(fifo8_status(&timerfifo2) != 0) {
         i = fifo8_get(&timerfifo2);
         io_sti();
-        putfonts8_asc(buf_back, binfo->scrnx, 0, 80, COL8_FFFFFF, "50000 ticks");
+        putfonts8_asc(buf_back, binfo->scrnx, 0, 80, COL8_FFFFFF, "5000 ticks");
         sheet_refresh(sht_back, 0, 80, binfo->scrnx, 96);
       } else if(fifo8_status(&timerfifo3) != 0) {
           i = fifo8_get(&timerfifo3);
