@@ -118,9 +118,7 @@ void main() {
 
   for(;;) {
     sprintf(s, "%u", timerctl->count);
-    boxfill8(buf_win, 160, COL8_C6C6C6, 40, 28, 120, 44);
-    putfonts8_asc(buf_win, 160, 40, 28, COL8_000000, s);
-    sheet_refresh(sht_win, 40, 28, 120, 44);
+    putfonts8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, strlen(s));
 
     io_cli();
     if(fifo8_status(keyfifo) + fifo8_status(mousefifo) + fifo8_status(&timerfifo) + fifo8_status(&timerfifo2) + fifo8_status(&timerfifo3) == 0) {
@@ -130,17 +128,13 @@ void main() {
         i = fifo8_get(keyfifo);
         io_sti();
         sprintf(s, "%u", i);
-        boxfill8(buf_back, binfo->scrnx, COL8_008484, 0, 0, 64, 32);
-        putfonts8_asc(buf_back, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
-        sheet_refresh(sht_back, 0, 0, 64, 32);
+        putfonts8_asc_sht(sht_back, 0, 0, COL8_000000, COL8_008484, s, strlen(s));
       } else if(fifo8_status(mousefifo) != 0) {
         i = fifo8_get(mousefifo);
         io_sti();
         if(mouse_decode(&mdec, i) != 0) {
-          boxfill8(buf_back, binfo->scrnx, COL8_848400, 128, 0, 300, 32);
           sprintf(s, "%u %u %u", mdec.buf[0], mdec.buf[1], mdec.buf[2]);
-          putfonts8_asc(buf_back, binfo->scrnx, 128, 0, COL8_FFFFFF, s);
-          sheet_refresh(sht_back, 128, 0, 300, 32);
+          putfonts8_asc_sht(sht_back, 128, 0, COL8_000000, COL8_848400, s, 12);
 
           mx += mdec.x;
           my += mdec.y;
@@ -155,13 +149,11 @@ void main() {
       } else if(fifo8_status(&timerfifo) != 0) {
         i = fifo8_get(&timerfifo);
         io_sti();
-        putfonts8_asc(buf_back, binfo->scrnx, 0, 64, COL8_FFFFFF, "10000 ticks");
-        sheet_refresh(sht_back, 0, 64, binfo->scrnx, 80);
+        putfonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_840084, "10000 ticks", 11);
       } else if(fifo8_status(&timerfifo2) != 0) {
         i = fifo8_get(&timerfifo2);
         io_sti();
-        putfonts8_asc(buf_back, binfo->scrnx, 0, 80, COL8_FFFFFF, "5000 ticks");
-        sheet_refresh(sht_back, 0, 80, binfo->scrnx, 96);
+        putfonts8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_840084, "5000 ticks", 10);
       } else if(fifo8_status(&timerfifo3) != 0) {
           i = fifo8_get(&timerfifo3);
           io_sti();
