@@ -39,14 +39,14 @@ load_kernel:
 	mov dl, [BOOT_DRIVE]
 	call disk_load
 
-        mov al, 0x13
-        mov ah, 0x00
+        mov bx, 0x4105
+        mov ax, 0x4f02
         int 0x10
 
         mov byte[VMODE], 8
-        mov word[SCRNX], 320
-        mov word[SCRNY], 200
-        mov dword[VRAM], 0x000a0000
+        mov word[SCRNX], 1024
+        mov word[SCRNY], 768
+        mov dword[VRAM], 0xe0000000
 
         mov ah, 0x02
         int 0x16
