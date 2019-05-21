@@ -34,7 +34,7 @@ void main() {
   struct TIMERCTL *timerctl = (struct TIMERCTL *)TIMERCTL_ADDR;
   struct MOUSE_DEC mdec;
   int mx, my;
-  unsigned char i;
+  int i;
   char s[128];
   struct MEMMAN *memman = (struct MEMMAN *)MEMMAN_ADDR;
   unsigned memtotal, memstart;
@@ -142,7 +142,7 @@ void main() {
         putfonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_840084, "10000 ticks", 11);
       } else if(i == 3) {
         putfonts8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_840084, "5000 ticks", 10);
-      } else if(i = 1) {
+      } else if(i == 1) {
           timer_init(timer3, fifo, 0);
           boxfill8(buf_back, binfo->scrnx, COL8_FFFFFF, 8, 96, 16, 112);
           timer_settime(timer3, 3000);

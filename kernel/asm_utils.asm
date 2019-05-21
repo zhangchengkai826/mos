@@ -1,6 +1,6 @@
 [bits 32]
 
-global io_in8, io_out8, io_load_eflags, io_store_eflags
+global io_in8, io_in32, io_out8, io_load_eflags, io_store_eflags
 global asm_inthandler20, asm_inthandler21, asm_inthandler2c
 global load_idtr, load_cr0, store_cr0, memtest_sub
 
@@ -10,6 +10,11 @@ io_in8:
         mov edx, [esp+4]
         mov eax, 0
         in al, dx
+        ret
+
+io_in32:
+        mov edx, [esp+4]
+        in eax, dx
         ret
 
 io_out8:
