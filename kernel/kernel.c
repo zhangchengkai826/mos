@@ -29,10 +29,9 @@ void make_window8(unsigned char *buf, int xsize, int ysize, char *title) {
 void main() {
   struct GATE_DESCRIPTOR idt[256];
   struct BOOTINFO *binfo = (struct BOOTINFO *)ADR_BOOTINFO;
-  struct FIFO8 *keyfifo = (struct FIFO8 *)KEYFIFO_ADDR;
-  struct FIFO8 *mousefifo = (struct FIFO8 *)MOUSEFIFO_ADDR;
+  struct FIFO32 *fifo = (struct FIFO32 *)FIFO_ADDR;
+  int fifobuf[128];
   struct TIMERCTL *timerctl = (struct TIMERCTL *)TIMERCTL_ADDR;
-  unsigned char keybuf[32], mousebuf[128], timerbuf[8], timerbuf2[8], timerbuf3[8];
   struct MOUSE_DEC mdec;
   int mx, my;
   unsigned char i;
@@ -42,7 +41,6 @@ void main() {
   struct SHTCTL *shtctl;
   struct SHEET *sht_back, *sht_win, *sht_mouse;
   unsigned char *buf_back, *buf_win, buf_mouse[128];
-  struct FIFO8 timerfifo, timerfifo2, timerfifo3;
   struct TIMER *timer, *timer2, *timer3;
 
   io_cli();
@@ -52,8 +50,7 @@ void main() {
   set_gatedesc(idt+0x20, (unsigned)asm_inthandler20, 1 << 3, AR_INTGATE32);
   set_gatedesc(idt+0x21, (unsigned)asm_inthandler21, 1 << 3, AR_INTGATE32);
   set_gatedesc(idt+0x2c, (unsigned)asm_inthandler2c, 1 << 3, AR_INTGATE32);
-  fifo8_init(keyfifo, 32, keybuf);
-  fifo8_init(mousefifo, 128, mousebuf);
+  fifo32_init(fifo, 128, fifobuf);
   init_keyboard();
   enable_mouse(&mdec);
   io_out8(PIC0_IMR, 0xf8);
@@ -103,17 +100,14 @@ void main() {
   putfonts8_asc(buf_back, binfo->scrnx, 0, 182, COL8_FFFF00, s);
   debug end */
 
-  fifo8_init(&timerfifo, 8, timerbuf);
   timer = timer_alloc();
-  timer_init(timer, &timerfifo, 1);
+  timer_init(timer, fifo, 10);
   timer_settime(timer, 10000);
-  fifo8_init(&timerfifo2, 8, timerbuf2);
   timer2 = timer_alloc();
-  timer_init(timer2, &timerfifo2, 1);
+  timer_init(timer2, fifo, 3);
   timer_settime(timer2, 5000);
-  fifo8_init(&timerfifo3, 8, timerbuf3);
   timer3 = timer_alloc();
-  timer_init(timer3, &timerfifo3, 1);
+  timer_init(timer3, fifo, 1);
   timer_settime(timer3, 3000);
 
   for(;;) {
@@ -121,18 +115,16 @@ void main() {
     putfonts8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, strlen(s));
 
     io_cli();
-    if(fifo8_status(keyfifo) + fifo8_status(mousefifo) + fifo8_status(&timerfifo) + fifo8_status(&timerfifo2) + fifo8_status(&timerfifo3) == 0) {
+    if(fifo32_status(fifo) == 0) {
       io_sti();
     } else {
-      if(fifo8_status(keyfifo) != 0) {
-        i = fifo8_get(keyfifo);
-        io_sti();
+      i = fifo32_get(fifo);
+      io_sti();
+      if(i >= 256 && i < 512) { /* keyboard */
         sprintf(s, "%u", i);
         putfonts8_asc_sht(sht_back, 0, 0, COL8_000000, COL8_008484, s, strlen(s));
-      } else if(fifo8_status(mousefifo) != 0) {
-        i = fifo8_get(mousefifo);
-        io_sti();
-        if(mouse_decode(&mdec, i) != 0) {
+      } else if(i >= 512 && i < 768) { /* mouse */
+        if(mouse_decode(&mdec, i-512) != 0) {
           sprintf(s, "%u %u %u", mdec.buf[0], mdec.buf[1], mdec.buf[2]);
           putfonts8_asc_sht(sht_back, 128, 0, COL8_000000, COL8_848400, s, 12);
 
@@ -146,24 +138,18 @@ void main() {
             my = binfo->scrny - 1;
           sheet_slide(sht_mouse, mx, my);
         }
-      } else if(fifo8_status(&timerfifo) != 0) {
-        i = fifo8_get(&timerfifo);
-        io_sti();
+      } else if(i == 10) {
         putfonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_840084, "10000 ticks", 11);
-      } else if(fifo8_status(&timerfifo2) != 0) {
-        i = fifo8_get(&timerfifo2);
-        io_sti();
+      } else if(i == 3) {
         putfonts8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_840084, "5000 ticks", 10);
-      } else if(fifo8_status(&timerfifo3) != 0) {
-          i = fifo8_get(&timerfifo3);
-          io_sti();
-          if(i != 0) {
-            timer_init(timer3, &timerfifo3, 0);
-            boxfill8(buf_back, binfo->scrnx, COL8_FFFFFF, 8, 96, 16, 112);
-          } else {
-            timer_init(timer3, &timerfifo3, 1);
-            boxfill8(buf_back, binfo->scrnx, COL8_000000, 8, 96, 16, 112);
-          }
+      } else if(i = 1) {
+          timer_init(timer3, fifo, 0);
+          boxfill8(buf_back, binfo->scrnx, COL8_FFFFFF, 8, 96, 16, 112);
+          timer_settime(timer3, 3000);
+          sheet_refresh(sht_back, 8, 96, 16, 112);
+      } else if(i == 0) {
+          timer_init(timer3, fifo, 1);
+          boxfill8(buf_back, binfo->scrnx, COL8_000000, 8, 96, 16, 112);
           timer_settime(timer3, 3000);
           sheet_refresh(sht_back, 8, 96, 16, 112);
       }

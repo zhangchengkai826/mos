@@ -4,9 +4,8 @@
 #include "stdlib.h"
 #include "timer.h"
 
-#define KEYFIFO_ADDR 0x400000
-#define MOUSEFIFO_ADDR (KEYFIFO_ADDR+sizeof(struct FIFO8))
-#define TIMERCTL_ADDR (MOUSEFIFO_ADDR+sizeof(struct FIFO8))
+#define FIFO_ADDR 0x400000
+#define TIMERCTL_ADDR (FIFO_ADDR+sizeof(struct FIFO32))
 #define MEMMAN_ADDR (TIMERCTL_ADDR+sizeof(struct TIMERCTL))
 #define MEMMAN_FREES 4090
 

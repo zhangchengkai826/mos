@@ -6,8 +6,8 @@
 
 struct TIMER {
   unsigned timeout, flags;
-  struct FIFO8 *fifo;
-  unsigned char data;
+  struct FIFO32 *fifo;
+  int data;
 };
 struct TIMERCTL {
   unsigned count, next, using;
@@ -20,7 +20,7 @@ void asm_inthandler20();
 void inthandler20(int *esp);
 struct TIMER *timer_alloc();
 void timer_free(struct TIMER *timer);
-void timer_init(struct TIMER *timer, struct FIFO8 *fifo, unsigned char data);
+void timer_init(struct TIMER *timer, struct FIFO32 *fifo, int data);
 void timer_settime(struct TIMER *timer, unsigned timeout);
 
 #endif /* _TIMER_H */

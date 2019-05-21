@@ -6,11 +6,11 @@
 #define KBC_MODE 0x47
 
 void inthandler21(int *esp) {
-  unsigned char data;
-  struct FIFO8 *keyfifo = (struct FIFO8 *)KEYFIFO_ADDR;
+  int data;
+  struct FIFO32 *fifo = (struct FIFO32 *)FIFO_ADDR;
   io_out8(PIC0_OCW2, 0x61);
   data = io_in8(PORT_KEYDAT);
-  fifo8_put(keyfifo, data);
+  fifo32_put(fifo, data + 256);
 }
 
 void wait_KBC_sendready() {

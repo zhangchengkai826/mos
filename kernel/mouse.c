@@ -15,12 +15,12 @@ void enable_mouse(struct MOUSE_DEC *mdec) {
 }
 
 void inthandler2c(int *esp) {
-  unsigned char data;
-  struct FIFO8 *mousefifo = (struct FIFO8 *)MOUSEFIFO_ADDR;
+  int data;
+  struct FIFO32 *fifo = (struct FIFO32 *)FIFO_ADDR;
   io_out8(PIC1_OCW2, 0x64);
   io_out8(PIC0_OCW2, 0x62);
   data = io_in8(PORT_KEYDAT);
-  fifo8_put(mousefifo, data);
+  fifo32_put(fifo, data + 512);
 }
 
 int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat) {
