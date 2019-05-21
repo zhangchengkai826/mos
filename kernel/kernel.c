@@ -94,7 +94,7 @@ void main() {
   sheet_updown(sht_mouse, 2);
   
   sprintf(s, "memory %uKB, free %uKB", memtotal / 1024, memman_total(memman) / 1024);
-  putfonts8_asc(buf_back, binfo->scrnx, 0, 150, COL8_FFFF00, s);
+  putfonts8_asc_sht(sht_back, 0, 150, COL8_FFFF00, COL8_FF0000, s, strlen(s));
   /* debug start 
   sprintf(s, "[1]a:%u, s:%u", MOUSEFIFO_ADDR, (unsigned)mousefifo);
   putfonts8_asc(buf_back, binfo->scrnx, 0, 166, COL8_FFFF00, s);
@@ -102,7 +102,6 @@ void main() {
   sprintf(s, "[2]a:%u, t:%u", memman->free[0].addr, atmp);
   putfonts8_asc(buf_back, binfo->scrnx, 0, 182, COL8_FFFF00, s);
   debug end */
-  sheet_refresh(sht_back, 0, 150, binfo->scrnx, 198);
 
   fifo8_init(&timerfifo, 8, timerbuf);
   timer = timer_alloc();

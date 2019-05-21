@@ -1,4 +1,5 @@
 #include "fonts.h"
+#include "graphic.h"
 
 void putfont8(unsigned char *vram, int xsize, int x, int y, unsigned char c, unsigned char *font) {
   int i;
@@ -23,5 +24,11 @@ void putfonts8_asc(char *vram, int xsize, int x, int y, unsigned char c, unsigne
     putfont8(vram, xsize, x, y, c, fonts + *s * 16);
     x += 10;
   }
+}
+
+void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, int l) {
+  boxfill8(sht->buf, sht->bxsize, b, x, y, x+l*8+(l-1)*2, y+16);
+  putfonts8_asc(sht->buf, sht->bxsize, x, y, c, s);
+  sheet_refresh(sht, x, y, x+l*8+(l-1)*2, y+16);
 }
 
