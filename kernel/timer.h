@@ -5,13 +5,14 @@
 #define MAX_TIMER 500
 
 struct TIMER {
+  struct TIMER *next;
   unsigned timeout, flags;
   struct FIFO32 *fifo;
   int data;
 };
 struct TIMERCTL {
-  unsigned count, next, using;
-  struct TIMER *timers[MAX_TIMER];
+  unsigned count, next;
+  struct TIMER *t0;
   struct TIMER timers0[MAX_TIMER];
 };
 
