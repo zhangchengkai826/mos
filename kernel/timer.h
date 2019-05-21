@@ -10,8 +10,9 @@ struct TIMER {
   unsigned char data;
 };
 struct TIMERCTL {
-  unsigned count, next;
-  struct TIMER timer[MAX_TIMER];
+  unsigned count, next, using;
+  struct TIMER *timers[MAX_TIMER];
+  struct TIMER timers0[MAX_TIMER];
 };
 
 void init_pit();
