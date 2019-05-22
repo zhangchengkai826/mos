@@ -21,7 +21,7 @@ void init_mouse_cursor8(unsigned char *vram) {
 }
 
 void make_window8(unsigned char *buf, int xsize, int ysize, char *title) {
-  boxfill8(buf, xsize, COL8_C6C6C6, 0, 0, xsize, ysize);
+  boxfill8(buf, xsize, COL8_FFFFFF, 0, 0, xsize, ysize);
   boxfill8(buf, xsize, COL8_848484, 0, 0, xsize, 20);
   putfonts8_asc(buf, xsize, 2, 2, COL8_FFFFFF, title);
 }
@@ -42,7 +42,15 @@ void main() {
   struct SHEET *sht_back, *sht_win, *sht_mouse;
   unsigned char *buf_back, *buf_win, buf_mouse[128];
   struct TIMER *timer, *timer2, *timer3;
-
+  int cursor_x, cursor_c;
+  char keytable[] = {0, 0, '1', '2', '3', '4', '5', '6', '7',
+    '8', '9', '0', '-', '^', 0, 0, 'Q', 'W', 'E', 'R', 'T', 'Y',
+    'U', 'I', 'O', 'P', '@', '[', 0, 0, 'A', 'S', 'D', 'F', 'G',
+    'H', 'J', 'K', 'L', ';', ':', 0, 0, ']', 'Z', 'X', 'C', 'V',
+    'B', 'N', 'M', ',', '.', '/', 0, '*', 0, ' ', 0, 0, 0, 0, 0,
+     0, 0, 0, 0, 0, 0, 0, 0, '7', '8', '9', '-', '4', '5', '6',
+     '+', '1', '2', '3', '0', '.'
+  };
   io_cli();
   init_idt(idt);
   init_pic();
@@ -74,17 +82,17 @@ void main() {
 
   sheet_setbuf(sht_back, buf_back, binfo->scrnx, binfo->scrny, COL_TRANSPARENT);
   sheet_setbuf(sht_mouse, buf_mouse, 8, 16, COL_TRANSPARENT);
-  sheet_setbuf(sht_win, buf_win, 160, 68, COL_TRANSPARENT);
+  sheet_setbuf(sht_win, buf_win, 320, 240, COL_TRANSPARENT);
 
   init_screen8(buf_back, binfo->scrnx, binfo->scrny);
   init_mouse_cursor8(buf_mouse);
-  make_window8(buf_win, 160, 68, "window");
+  make_window8(buf_win, 320, 240, "My 1st window");
 
   sheet_slide(sht_back, 0, 0);
   mx = binfo->scrnx / 2 - 4;
   my = binfo->scrny / 2 - 8;
   sheet_slide(sht_mouse, mx, my);
-  sheet_slide(sht_win, 140, 72);
+  sheet_slide(sht_win, 320, 240);
 
   sheet_updown(sht_back, 0);
   sheet_updown(sht_win, 1);
@@ -108,11 +116,11 @@ void main() {
   timer_settime(timer2, 5000);
   timer3 = timer_alloc();
   timer_init(timer3, fifo, 1);
-  timer_settime(timer3, 3000);
+  timer_settime(timer3, 500);
 
   for(;;) {
     sprintf(s, "%u", timerctl->count);
-    putfonts8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, strlen(s));
+    putfonts8_asc_sht(sht_win, 40, 46, COL8_000000, COL8_C6C6C6, s, strlen(s));
 
     io_cli();
     if(fifo32_status(fifo) == 0) {
@@ -121,8 +129,22 @@ void main() {
       i = fifo32_get(fifo);
       io_sti();
       if(i >= 256 && i < 512) { /* keyboard */
-        sprintf(s, "%u", i);
+        sprintf(s, "%u", i-256);
         putfonts8_asc_sht(sht_back, 0, 0, COL8_000000, COL8_008484, s, strlen(s));
+        if(i-256 < 0x54) {
+          if(keytable[i-256] != 0 && cursor_x < 312) {
+            s[0] = keytable[i-256];
+            s[1] = 0;
+            putfonts8_asc_sht(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, s, 1);
+            cursor_x += 10;
+          }
+        }
+        if(i-256 == 0x0e && cursor_x > 8) {
+          putfonts8_asc_sht(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, " ", 1);
+          cursor_x -= 10;
+        }
+        boxfill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x+8, 44);
+        sheet_refresh(sht_win, cursor_x, 28, cursor_x+8, 44);
       } else if(i >= 512 && i < 768) { /* mouse */
         if(mouse_decode(&mdec, i-512) != 0) {
           sprintf(s, "%u %u %u", mdec.buf[0], mdec.buf[1], mdec.buf[2]);
@@ -142,16 +164,18 @@ void main() {
         putfonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_840084, "10000 ticks", 11);
       } else if(i == 3) {
         putfonts8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_840084, "5000 ticks", 10);
-      } else if(i == 1) {
+      } else if(i <= 1) {
+        if(i != 0) {
           timer_init(timer3, fifo, 0);
-          boxfill8(buf_back, binfo->scrnx, COL8_FFFFFF, 8, 96, 16, 112);
-          timer_settime(timer3, 3000);
-          sheet_refresh(sht_back, 8, 96, 16, 112);
-      } else if(i == 0) {
+          cursor_c = COL8_000000;
+        }
+        else if(i == 0) {
           timer_init(timer3, fifo, 1);
-          boxfill8(buf_back, binfo->scrnx, COL8_000000, 8, 96, 16, 112);
-          timer_settime(timer3, 3000);
-          sheet_refresh(sht_back, 8, 96, 16, 112);
+          cursor_c = COL8_FFFFFF;
+        }
+        timer_settime(timer3, 500);
+        boxfill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x+8, 44);
+        sheet_refresh(sht_win, cursor_x, 28, cursor_x+8, 44);
       }
     } 
   }
