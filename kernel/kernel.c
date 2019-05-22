@@ -27,6 +27,12 @@ void make_window8(unsigned char *buf, int xsize, int ysize, char *title) {
   putfonts8_asc(buf, xsize, 2, 2, COL8_FFFFFF, title);
 }
 
+void task_b_main() {
+  for(;;) {
+    hlt();
+  }
+}
+
 void main() {
   struct SEGMENT_DESCRIPTOR gdt[256];
   struct GATE_DESCRIPTOR idt[256];
@@ -54,6 +60,7 @@ void main() {
      '+', '1', '2', '3', '0', '.'
   };
   struct TSS32 tss_a, tss_b;
+  unsigned task_b_esp;
 
   io_cli();
   init_gdtidt(gdt, idt);
@@ -78,6 +85,26 @@ void main() {
   tss_a.iomap = 0x40000000;
   tss_b.ldtr = 0;
   tss_b.iomap = 0x40000000;
+  set_segmdesc(gdt + 3, 103, (unsigned)&tss_a, AR_TSS32);
+  set_segmdesc(gdt + 4, 103, (unsigned)&tss_b, AR_TSS32);
+  load_tr(3 << 3);
+  task_b_esp = memman_alloc_4k(memman, 64*1024) + 64*1024;
+  tss_b.eip = (unsigned)&task_b_main;
+  tss_b.eflags = 0x00000202;
+  tss_b.eax = 0;
+  tss_b.ecx = 0;
+  tss_b.edx = 0;
+  tss_b.ebx = 0;
+  tss_b.esp = task_b_esp;
+  tss_b.ebp = 0;
+  tss_b.esi = 0;
+  tss_b.edi = 0;
+  tss_b.es = 2 << 3;
+  tss_b.cs = 1 << 3;
+  tss_b.ss = 2 << 3;
+  tss_b.ds = 2 << 3;
+  tss_b.fs = 2 << 3;
+  tss_b.gs = 2 << 3;
 
   init_palette();
 
@@ -173,6 +200,7 @@ void main() {
         }
       } else if(i == 10) {
         putfonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_840084, "10000 ticks", 11);
+        taskswitch4();
       } else if(i == 3) {
         putfonts8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_840084, "5000 ticks", 10);
       } else if(i <= 1) {

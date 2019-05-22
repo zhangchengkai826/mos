@@ -2,9 +2,14 @@
 
 global io_in8, io_in32, io_out8, io_load_eflags, io_store_eflags
 global asm_inthandler20, asm_inthandler21, asm_inthandler2c
-global load_gdtr, load_idtr, load_cr0, store_cr0, memtest_sub
+global load_gdtr, load_idtr, load_tr, load_cr0, store_cr0, memtest_sub
+global taskswitch4
 
 extern inthandler20, inthandler21, inthandler2c
+
+taskswitch4:
+        jmp 4*8:0
+        ret
 
 io_in8:
         mov edx, [esp+4]
@@ -98,6 +103,10 @@ load_idtr:
         mov ax, [esp+4]
         mov [esp+6], ax
         lidt [esp+6]
+        ret
+
+load_tr:
+        ltr [esp+4]
         ret
 
 load_cr0:
