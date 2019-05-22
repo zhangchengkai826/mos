@@ -2,7 +2,7 @@
 
 global io_in8, io_in32, io_out8, io_load_eflags, io_store_eflags
 global asm_inthandler20, asm_inthandler21, asm_inthandler2c
-global load_idtr, load_cr0, store_cr0, memtest_sub
+global load_gdtr, load_idtr, load_cr0, store_cr0, memtest_sub
 
 extern inthandler20, inthandler21, inthandler2c
 
@@ -87,6 +87,12 @@ asm_inthandler2c:
         pop ds
         pop es
         iret
+
+load_gdtr:
+        mov ax, [esp+4]
+        mov [esp+6], ax
+        lgdt [esp+6]
+        ret
 
 load_idtr:
         mov ax, [esp+4]

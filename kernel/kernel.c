@@ -6,6 +6,7 @@
 #include "mem.h"
 #include "sheet.h"
 #include "timer.h"
+#include "mt.h"
 #include "stdlib.h"
 
 void init_screen8(unsigned char *vram, int xsize, int ysize) {
@@ -27,6 +28,7 @@ void make_window8(unsigned char *buf, int xsize, int ysize, char *title) {
 }
 
 void main() {
+  struct SEGMENT_DESCRIPTOR gdt[256];
   struct GATE_DESCRIPTOR idt[256];
   struct BOOTINFO *binfo = (struct BOOTINFO *)ADR_BOOTINFO;
   struct FIFO32 *fifo = (struct FIFO32 *)FIFO_ADDR;
@@ -51,8 +53,10 @@ void main() {
      0, 0, 0, 0, 0, 0, 0, 0, '7', '8', '9', '-', '4', '5', '6',
      '+', '1', '2', '3', '0', '.'
   };
+  struct TSS32 tss_a, tss_b;
+
   io_cli();
-  init_idt(idt);
+  init_gdtidt(gdt, idt);
   init_pic();
   init_pit();
   set_gatedesc(idt+0x20, (unsigned)asm_inthandler20, 1 << 3, AR_INTGATE32);
@@ -69,6 +73,11 @@ void main() {
   memtotal = memtest(memstart, 0xbfffffff);
   memman_init(memman);
   memman_free(memman, memstart, memtotal-memstart);
+
+  tss_a.ldtr = 0;
+  tss_a.iomap = 0x40000000;
+  tss_b.ldtr = 0;
+  tss_b.iomap = 0x40000000;
 
   init_palette();
 
