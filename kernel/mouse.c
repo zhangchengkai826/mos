@@ -31,8 +31,10 @@ int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat) {
     return 0;
   }
   if(mdec->phase == 1) {
-    mdec->buf[0] = dat;
-    mdec->phase = 2;
+    if((dat & 0xc8) == 0x08) {
+      mdec->buf[0] = dat;
+      mdec->phase = 2;
+    }
     return 0;
   }
   if(mdec->phase == 2) {

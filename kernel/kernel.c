@@ -159,6 +159,8 @@ void main() {
           if(my > binfo->scrny - 1)
             my = binfo->scrny - 1;
           sheet_slide(sht_mouse, mx, my);
+          if((mdec.btn & 0x01) != 0)
+            sheet_slide(sht_win, mx-160, my-8);
         }
       } else if(i == 10) {
         putfonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_840084, "10000 ticks", 11);
