@@ -59,5 +59,6 @@ void set_gatedesc(struct GATE_DESCRIPTOR *gd, unsigned offset, unsigned short se
 void init_gdtidt(struct SEGMENT_DESCRIPTOR *gdt, struct GATE_DESCRIPTOR *idt);
 unsigned load_cr0();
 void store_cr0(unsigned cr0);
+void farjmp(unsigned eip, unsigned short cs);
 
 #endif /* _LOWLEVEL_H */

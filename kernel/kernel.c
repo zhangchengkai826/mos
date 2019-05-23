@@ -29,13 +29,13 @@ void make_window8(unsigned char *buf, int xsize, int ysize, char *title) {
 
 void task_b_main() {
   struct FIFO32 *fifo = (struct FIFO32 *)FIFO_ADDR;
-  struct TIMER *timer;
+  struct TIMER *timer_ts;
   int i, fifobuf[128];
 
   fifo32_init(fifo, 128, fifobuf);
-  timer = timer_alloc();
-  timer_init(timer, fifo, 1);
-  timer_settime(timer, 50000);
+  timer_ts = timer_alloc();
+  timer_init(timer_ts, fifo, 2);
+  timer_settime(timer_ts, 5);
 
   for(;;) {
     io_cli();
@@ -44,8 +44,8 @@ void task_b_main() {
     } else {
       i = fifo32_get(fifo);
       io_sti();
-      if(i == 1)
-        taskswitch3();
+      if(i == 2)
+        farjmp(0, 3 << 3);
     }
   }
 }
@@ -66,7 +66,7 @@ void main() {
   struct SHTCTL *shtctl;
   struct SHEET *sht_back, *sht_win, *sht_mouse;
   unsigned char *buf_back, *buf_win, buf_mouse[128];
-  struct TIMER *timer, *timer2, *timer3;
+  struct TIMER *timer, *timer2, *timer3, *timer_ts;
   int cursor_x, cursor_c;
   char keytable[] = {0, 0, '1', '2', '3', '4', '5', '6', '7',
     '8', '9', '0', '-', '^', 0, 0, 'Q', 'W', 'E', 'R', 'T', 'Y',
@@ -170,6 +170,9 @@ void main() {
   timer3 = timer_alloc();
   timer_init(timer3, fifo, 1);
   timer_settime(timer3, 500);
+  timer_ts = timer_alloc();
+  timer_init(timer_ts, fifo, 2);
+  timer_settime(timer_ts, 5);
 
   for(;;) {
     sprintf(s, "%u", timerctl->count);
@@ -217,7 +220,6 @@ void main() {
         }
       } else if(i == 10) {
         putfonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_840084, "10000 ticks", 11);
-        taskswitch4();
       } else if(i == 3) {
         putfonts8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_840084, "5000 ticks", 10);
       } else if(i <= 1) {
@@ -232,6 +234,9 @@ void main() {
         timer_settime(timer3, 500);
         boxfill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x+8, 44);
         sheet_refresh(sht_win, cursor_x, 28, cursor_x+8, 44);
+      } else if(i == 2) {
+        farjmp(0, 4 << 3);
+        timer_settime(timer_ts, 5);
       }
     } 
   }
