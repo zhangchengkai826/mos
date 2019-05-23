@@ -3,9 +3,13 @@
 global io_in8, io_in32, io_out8, io_load_eflags, io_store_eflags
 global asm_inthandler20, asm_inthandler21, asm_inthandler2c
 global load_gdtr, load_idtr, load_tr, load_cr0, store_cr0, memtest_sub
-global taskswitch4
+global taskswitch3, taskswitch4
 
 extern inthandler20, inthandler21, inthandler2c
+
+taskswitch3:
+        jmp 3*8:0
+        ret
 
 taskswitch4:
         jmp 4*8:0

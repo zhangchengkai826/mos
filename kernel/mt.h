@@ -8,6 +8,7 @@ struct TSS32 {
   int ldtr, iomap;
 };
 
+void taskswitch3();
 void taskswitch4();
 
 #endif /*_MT_H */
