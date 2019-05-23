@@ -32,7 +32,6 @@ void task_b_main() {
   struct TIMER *timer_ts;
   int i, fifobuf[128];
 
-  fifo32_init(fifo, 128, fifobuf);
   timer_ts = timer_alloc();
   timer_init(timer_ts, fifo, 2);
   timer_settime(timer_ts, 5);
@@ -44,8 +43,10 @@ void task_b_main() {
     } else {
       i = fifo32_get(fifo);
       io_sti();
-      if(i == 2)
+      if(i == 2) {
         farjmp(0, 3 << 3);
+        timer_settime(timer_ts, 5);
+      }
     }
   }
 }
