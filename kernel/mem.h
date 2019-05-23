@@ -4,9 +4,12 @@
 #include "stdlib.h"
 #include "timer.h"
 
-#define FIFO_ADDR 0x400000
+#define GDT_ADDR 0x400000
+#define FIFO_ADDR (GDT_ADDR + 256*8)
 #define TIMERCTL_ADDR (FIFO_ADDR+sizeof(struct FIFO32))
-#define MEMMAN_ADDR (TIMERCTL_ADDR+sizeof(struct TIMERCTL))
+#define PTASKCTL_ADDR (TIMERCTL_ADDR+sizeof(struct TIMERCTL))
+#define PTASKTIMER_ADDR (PTASKCTL_ADDR+4)
+#define MEMMAN_ADDR (PTASKTIMER_ADDR+4)
 #define MEMMAN_FREES 4090
 
 struct FREEINFO {

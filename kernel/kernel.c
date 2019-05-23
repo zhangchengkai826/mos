@@ -77,7 +77,7 @@ void main() {
      0, 0, 0, 0, 0, 0, 0, 0, '7', '8', '9', '-', '4', '5', '6',
      '+', '1', '2', '3', '0', '.'
   };
-  struct TSS32 tss_a, tss_b;
+  struct TASK *task_a, *task_b;
   unsigned task_b_esp;
 
   io_cli();
@@ -98,31 +98,20 @@ void main() {
   memtotal = memtest(memstart, 0xbfffffff);
   memman_init(memman);
   memman_free(memman, memstart, memtotal-memstart);
-
-  tss_a.ldtr = 0;
-  tss_a.iomap = 0x40000000;
-  tss_b.ldtr = 0;
-  tss_b.iomap = 0x40000000;
-  set_segmdesc(gdt + 3, 103, (unsigned)&tss_a, AR_TSS32);
-  set_segmdesc(gdt + 4, 103, (unsigned)&tss_b, AR_TSS32);
-  load_tr(3 << 3);
-  task_b_esp = memman_alloc_4k(memman, 64*1024) + 64*1024;
-  tss_b.eip = (unsigned)&task_b_main;
-  tss_b.eflags = 0x00000202;
-  tss_b.eax = 0;
-  tss_b.ecx = 0;
-  tss_b.edx = 0;
-  tss_b.ebx = 0;
-  tss_b.esp = task_b_esp;
-  tss_b.ebp = 0;
-  tss_b.esi = 0;
-  tss_b.edi = 0;
-  tss_b.es = 2 << 3;
-  tss_b.cs = 1 << 3;
-  tss_b.ss = 2 << 3;
-  tss_b.ds = 2 << 3;
-  tss_b.fs = 2 << 3;
-  tss_b.gs = 2 << 3;
+  
+  task_a = task_init(memman);
+  fifo.task = task_a;
+  task_b = task_alloc();
+  task_b->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 8;
+  task_b->tss.eip = (int) &task_b_main;
+  task_b->tss.es = 1 * 8;
+  task_b->tss.cs = 2 * 8;
+  task_b->tss.ss = 1 * 8;
+  task_b->tss.ds = 1 * 8;
+  task_b->tss.fs = 1 * 8;
+  task_b->tss.gs = 1 * 8;
+  *((int *) (task_b->tss.esp + 4)) = (int) sht_back;
+  task_run(task_b);  tss_a.ldtr = 0;
 
   init_palette();
 
