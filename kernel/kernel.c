@@ -100,7 +100,7 @@ void main() {
   memman_free(memman, memstart, memtotal-memstart);
   
   task_a = task_init(memman);
-  fifo.task = task_a;
+  fifo->task = task_a;
   task_b = task_alloc();
   task_b->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 8;
   task_b->tss.eip = (int) &task_b_main;
@@ -111,7 +111,7 @@ void main() {
   task_b->tss.fs = 1 * 8;
   task_b->tss.gs = 1 * 8;
   *((int *) (task_b->tss.esp + 4)) = (int) sht_back;
-  task_run(task_b);  tss_a.ldtr = 0;
+  task_run(task_b);  
 
   init_palette();
 
