@@ -1,4 +1,5 @@
 #include "lowlevel.h"
+#include "mem.h"
 
 void hlt() {
   asm("hlt");
@@ -60,7 +61,8 @@ void set_gatedesc(struct GATE_DESCRIPTOR *gd, unsigned offset, unsigned short se
   gd->offset_high = (offset >> 16) & 0xffff;
 }
 
-void init_gdtidt(struct SEGMENT_DESCRIPTOR *gdt, struct GATE_DESCRIPTOR *idt) {
+void init_gdtidt(struct GATE_DESCRIPTOR *idt) {
+  struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *)GDT_ADDR;
   int i;
   for(i = 0; i < 256; i++) {
     set_segmdesc(gdt + i, 0, 0, 0);

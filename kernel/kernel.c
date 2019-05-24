@@ -51,11 +51,11 @@ void task_b_main() {
       i = fifo32_get(&fifo);
       io_sti();
       if (i == 1) {
-        sprintf(s, "%11d", count);
+        sprintf(s, "%u", count);
         putfonts8_asc_sht(sht_back, 0, 144, COL8_FFFFFF, COL8_008484, s, 11);
         timer_settime(timer_put, 1);
       } else if (i == 100) {
-        sprintf(s, "%11d", count - count0);
+        sprintf(s, "%u", count - count0);
         putfonts8_asc_sht(sht_back, 0, 128, COL8_FFFFFF, COL8_008484, s, 11);
         count0 = count;
         timer_settime(timer_1s, 100);
@@ -65,7 +65,6 @@ void task_b_main() {
 }
 
 void main() {
-  struct SEGMENT_DESCRIPTOR gdt[256];
   struct GATE_DESCRIPTOR idt[256];
   struct BOOTINFO *binfo = (struct BOOTINFO *)ADR_BOOTINFO;
   struct FIFO32 *fifo = (struct FIFO32 *)FIFO_ADDR;
@@ -80,7 +79,7 @@ void main() {
   struct SHTCTL *shtctl;
   struct SHEET *sht_back, *sht_win, *sht_mouse;
   unsigned char *buf_back, *buf_win, buf_mouse[128];
-  struct TIMER *timer, *timer2, *timer3, *timer_ts;
+  struct TIMER *timer, *timer2, *timer3;
   int cursor_x, cursor_c;
   char keytable[] = {0, 0, '1', '2', '3', '4', '5', '6', '7',
     '8', '9', '0', '-', '^', 0, 0, 'Q', 'W', 'E', 'R', 'T', 'Y',
@@ -94,7 +93,7 @@ void main() {
   unsigned task_b_esp;
 
   io_cli();
-  init_gdtidt(gdt, idt);
+  init_gdtidt(idt);
   init_pic();
   init_pit();
   set_gatedesc(idt+0x20, (unsigned)asm_inthandler20, 1 << 3, AR_INTGATE32);
@@ -112,19 +111,19 @@ void main() {
   memman_init(memman);
   memman_free(memman, memstart, memtotal-memstart);
   
-  /*task_a = task_init(memman);
+  task_a = task_init(memman);
   fifo->task = task_a;
   task_b = task_alloc();
   task_b->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 8;
   task_b->tss.eip = (int) &task_b_main;
-  task_b->tss.es = 1 * 8;
-  task_b->tss.cs = 2 * 8;
-  task_b->tss.ss = 1 * 8;
-  task_b->tss.ds = 1 * 8;
-  task_b->tss.fs = 1 * 8;
-  task_b->tss.gs = 1 * 8;
+  task_b->tss.es = 2 * 8;
+  task_b->tss.cs = 1 * 8;
+  task_b->tss.ss = 2 * 8;
+  task_b->tss.ds = 2 * 8;
+  task_b->tss.fs = 2 * 8;
+  task_b->tss.gs = 2 * 8;
   *((int *) (task_b->tss.esp + 4)) = (int) sht_back;
-  task_run(task_b);  */
+  task_run(task_b);  
 
   init_palette();
 
@@ -156,7 +155,7 @@ void main() {
   sheet_updown(sht_mouse, 2);
   
   sprintf(s, "memory %uKB, free %uKB", memtotal / 1024, memman_total(memman) / 1024);
-  putfonts8_asc_sht(sht_back, 0, 150, COL8_FFFF00, COL8_FF0000, s, strlen(s));
+  putfonts8_asc_sht(sht_back, 0, 180, COL8_FFFF00, COL8_FF0000, s, strlen(s));
   /* debug start 
   sprintf(s, "[1]a:%u, s:%u", MOUSEFIFO_ADDR, (unsigned)mousefifo);
   putfonts8_asc(buf_back, binfo->scrnx, 0, 166, COL8_FFFF00, s);
@@ -174,9 +173,6 @@ void main() {
   timer3 = timer_alloc();
   timer_init(timer3, fifo, 1);
   timer_settime(timer3, 500);
-  timer_ts = timer_alloc();
-  timer_init(timer_ts, fifo, 2);
-  timer_settime(timer_ts, 5);
 
   for(;;) {
     sprintf(s, "%u", timerctl->count);
@@ -184,6 +180,7 @@ void main() {
 
     io_cli();
     if(fifo32_status(fifo) == 0) {
+      task_sleep(task_a);
       io_sti();
     } else {
       i = fifo32_get(fifo);
