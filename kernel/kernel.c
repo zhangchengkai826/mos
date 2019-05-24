@@ -28,24 +28,37 @@ void make_window8(unsigned char *buf, int xsize, int ysize, char *title) {
 }
 
 void task_b_main() {
-  struct FIFO32 *fifo = (struct FIFO32 *)FIFO_ADDR;
-  struct TIMER *timer_ts;
-  int i, fifobuf[128];
+  struct FIFO32 fifo;
+  struct TIMER *timer_put, *timer_1s;
+  int i, fifobuf[128], count = 0, count0 = 0;
+  char s[12];
+  struct SHEET *sht_back = *(struct SHEET **)PSHTBACK_ADDR;
 
-  timer_ts = timer_alloc();
-  timer_init(timer_ts, fifo, 2);
-  timer_settime(timer_ts, 5);
+  fifo32_init(&fifo, 128, fifobuf, 0);
+  timer_put = timer_alloc();
+  timer_init(timer_put, &fifo, 1);
+  timer_settime(timer_put, 1);
+  timer_1s = timer_alloc();
+  timer_init(timer_1s, &fifo, 100);
+  timer_settime(timer_1s, 100);
 
-  for(;;) {
+  for (;;) {
+    count++;
     io_cli();
-    if(fifo32_status(fifo) == 0) {
-      io_stihlt();
-    } else {
-      i = fifo32_get(fifo);
+    if (fifo32_status(&fifo) == 0) {
       io_sti();
-      if(i == 2) {
-        farjmp(0, 3 << 3);
-        timer_settime(timer_ts, 5);
+    } else {
+      i = fifo32_get(&fifo);
+      io_sti();
+      if (i == 1) {
+        sprintf(s, "%11d", count);
+        putfonts8_asc_sht(sht_back, 0, 144, COL8_FFFFFF, COL8_008484, s, 11);
+        timer_settime(timer_put, 1);
+      } else if (i == 100) {
+        sprintf(s, "%11d", count - count0);
+        putfonts8_asc_sht(sht_back, 0, 128, COL8_FFFFFF, COL8_008484, s, 11);
+        count0 = count;
+        timer_settime(timer_1s, 100);
       }
     }
   }
@@ -117,6 +130,7 @@ void main() {
 
   shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
   sht_back = sheet_alloc(shtctl);
+  *(struct SHEET **)PSHTBACK_ADDR = sht_back;
   sht_mouse = sheet_alloc(shtctl);
   sht_win = sheet_alloc(shtctl);
 
@@ -224,9 +238,6 @@ void main() {
         timer_settime(timer3, 500);
         boxfill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x+8, 44);
         sheet_refresh(sht_win, cursor_x, 28, cursor_x+8, 44);
-      } else if(i == 2) {
-        farjmp(0, 4 << 3);
-        timer_settime(timer_ts, 5);
       }
     } 
   }
