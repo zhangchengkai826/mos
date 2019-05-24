@@ -87,7 +87,7 @@ void main() {
   set_gatedesc(idt+0x20, (unsigned)asm_inthandler20, 1 << 3, AR_INTGATE32);
   set_gatedesc(idt+0x21, (unsigned)asm_inthandler21, 1 << 3, AR_INTGATE32);
   set_gatedesc(idt+0x2c, (unsigned)asm_inthandler2c, 1 << 3, AR_INTGATE32);
-  fifo32_init(fifo, 128, fifobuf);
+  fifo32_init(fifo, 128, fifobuf, 0);
   init_keyboard();
   enable_mouse(&mdec);
   io_out8(PIC0_IMR, 0xf8);

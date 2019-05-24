@@ -1,6 +1,7 @@
 #include "timer.h"
 #include "lowlevel.h"
 #include "mem.h"
+#include "mt.h"
 #define PIT_CTRL 0x0043
 #define PIT_CNT0 0x0040
 #define TIMER_FLAGS_ALLOC 1
@@ -76,14 +77,14 @@ void timer_settime(struct TIMER *timer, unsigned timeout) {
 void inthandler20(int *esp) {
   struct TIMER *timer;
   char ts = 0;
-  struct TIMER *task_timer = (struct TIMER *)*PTASKTIMER_ADDR;
+  struct TIMER *task_timer = *(struct TIMER **)PTASKTIMER_ADDR;
   struct TIMERCTL *timerctl = (struct TIMERCTL *)TIMERCTL_ADDR;
   io_out8(PIC0_OCW2, 0x60);
   timerctl->count++;
   if (timerctl->next > timerctl->count) {
     return;
   }
-  timer = timerctl.t0; 
+  timer = timerctl->t0; 
   for (;;) {
     if (timer->timeout > timerctl->count) {
       break;

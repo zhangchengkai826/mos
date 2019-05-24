@@ -1,16 +1,15 @@
 #include "mt.h"
 #include "mem.h"
-
-struct TIMER *task_timer;
+#include "lowlevel.h"
 
 struct TASK *task_init(struct MEMMAN *memman) {
   int i;
   struct TASK *task;
   struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *)GDT_ADDR;
-  *PTASKCTL_ADDR = (struct TASKCTL *)memman_alloc_4k(memman, sizeof (struct TASKCTL));
-  struct taskctl = *PTASKCTL_ADDR;
-  *PTASKTIMER_ADDR = timer_alloc();
-  struct TIMER *task_timer = (struct TIMER *)*PTASKTIMER_ADDR;
+  *(struct TASKCTL **)PTASKCTL_ADDR = (struct TASKCTL *)memman_alloc_4k(memman, sizeof (struct TASKCTL));
+  struct TASKCTL *taskctl = *(struct TASKCTL **)PTASKCTL_ADDR;
+  *(struct TIMER **)PTASKTIMER_ADDR = timer_alloc();
+  struct TIMER *task_timer = *(struct TIMER **)PTASKTIMER_ADDR;
   for (i = 0; i < MAX_TASKS; i++) {
     taskctl->tasks0[i].flags = 0;
     taskctl->tasks0[i].sel = (TASK_GDT0 + i) << 3;
@@ -29,7 +28,7 @@ struct TASK *task_init(struct MEMMAN *memman) {
 struct TASK *task_alloc() {
   int i;
   struct TASK *task;
-  struct taskctl = *PTASKCTL_ADDR;
+  struct TASKCTL *taskctl = *(struct TASKCTL **)PTASKCTL_ADDR;
   for (i = 0; i < MAX_TASKS; i++) {
     if (taskctl->tasks0[i].flags == 0) {
       task = &taskctl->tasks0[i];
@@ -55,16 +54,15 @@ struct TASK *task_alloc() {
 }
 
 void task_run(struct TASK *task) {
-  struct taskctl = *PTASKCTL_ADDR;
+  struct TASKCTL *taskctl = *(struct TASKCTL **)PTASKCTL_ADDR;
   task->flags = TASK_RUNNING;
   taskctl->tasks[taskctl->running] = task;
   taskctl->running++;
 }
 
-void task_switch()
-{
-  struct taskctl = *PTASKCTL_ADDR;
-  struct TIMER *task_timer = (struct TIMER *)*PTASKTIMER_ADDR;
+void task_switch() {
+  struct TASKCTL *taskctl = *(struct TASKCTL **)PTASKCTL_ADDR;
+  struct TIMER *task_timer = *(struct TIMER **)PTASKTIMER_ADDR;
   timer_settime(task_timer, 2);
   if (taskctl->running >= 2) {
     taskctl->now++;
@@ -75,10 +73,10 @@ void task_switch()
   }
 }
 
-void task_sleep(struct TASK *task)
-{
+void task_sleep(struct TASK *task) {
   int i;
   char ts = 0;
+  struct TASKCTL *taskctl = *(struct TASKCTL **)PTASKCTL_ADDR;
   if (task->flags == TASK_RUNNING) {
     if (task == taskctl->tasks[taskctl->now]) {
       ts = 1; 
